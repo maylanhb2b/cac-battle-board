@@ -1,0 +1,1392 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>CAC ASM Battle Board</title><style>
+:root{--font-anthropic-sans:"Segoe UI","Helvetica Neue",Arial,sans-serif;--font-anthropic-serif:var(--font-anthropic-sans);
+--color-bg:#ffffff;--color-fg:#1d1b19;--color-fg-muted:#6b6560;--color-panel:#faf8f5;--color-border-line:#e6e1d8;
+--color-ok:#1f8a4c;--color-warn:#b86e00;--color-bad:#d1242f;
+--cds-font-size-caption:12px;--cds-font-size-body:14px;--cds-font-size-heading:15px;--cds-font-size-title:26px;--cds-font-weight-medium:600;
+--cds-gap-xs:4px;--cds-gap-sm:8px;--cds-gap-md:14px;--cds-gap-lg:22px;--cds-pad-xs:4px;--cds-pad-sm:8px;--cds-pad-md:14px;--cds-pad-lg:18px;--cds-radius:8px;
+--cds-chart-muted:#a8a29b;--cds-chart-grid:#ece8e1;--cds-chart-axis:#bdb7ae;--cds-surface-popover:#ffffff;--cds-border:#e6e1d8;
+--cds-shadow-popover:0 4px 16px rgba(0,0,0,.12);--cds-text-secondary:#6b6560;--cds-dur-slow:.3s;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--color-bg:#161514;--color-fg:#f2efea;--color-fg-muted:#a39d96;--color-panel:#1f1e1c;--color-border-line:#34312e;
+--color-ok:#4cc27e;--color-warn:#e0a03a;--color-bad:#ff5a5f;--cds-chart-muted:#6f6a64;--cds-chart-grid:#2c2a27;--cds-chart-axis:#4a4641;--cds-surface-popover:#262422;--cds-border:#3a3733;--cds-text-secondary:#a39d96;color-scheme:dark}}
+html,body{margin:0;background:var(--color-bg);color:var(--color-fg);font-family:var(--font-anthropic-sans);font-size:14px}
+#dash-root{max-width:1400px;margin:0 auto;padding:24px 16px}
+.dash-skeleton{color:transparent;background:var(--color-border-line);border-radius:4px}
+</style><style>
+.cac-login{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;background:var(--color-bg)}
+.cac-login form{width:100%;max-width:360px;display:flex;flex-direction:column;gap:12px;border:1px solid var(--color-border-line);border-left:4px solid #FD312E;border-radius:10px;padding:24px;background:var(--color-panel)}
+.cac-login h1{margin:0;font-size:22px} .cac-login p{margin:0;font-size:13px;color:var(--color-fg-muted)}
+.cac-login label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--color-fg-muted);text-transform:uppercase;letter-spacing:.04em}
+.cac-login input[type=text],.cac-login input[type=password]{font:inherit;font-size:16px;height:40px;padding:0 10px;border:1px solid var(--color-border-line);border-radius:6px;background:var(--color-bg);color:var(--color-fg);text-transform:none}
+.cac-login .rm{flex-direction:row;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:13px}
+.cac-login button{font:inherit;font-weight:600;height:42px;border:0;border-radius:6px;background:#FD312E;color:#fff;cursor:pointer}
+.cac-login button[disabled]{opacity:.6;cursor:wait}
+.cac-login .err{color:var(--color-bad);font-size:13px;min-height:1em}
+.cac-user{position:fixed;top:8px;right:12px;z-index:50;font-size:12px;color:var(--color-fg-muted);background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:999px;padding:4px 10px}
+.cac-user button{font:inherit;border:0;background:none;color:#FD312E;cursor:pointer;padding:0 0 0 6px}
+body:not(.authed) #dash-root{display:none}
+.role-view #tab-keysd,.role-view #tab-tier,.role-view #card-ch,.role-view .cac-link,.role-view #asm-clear{display:none!important}
+.lock-sup #sup-sel,.lock-sup label[for=sup-sel],.lock-asm .cac-filters .cac-fld:has(#sup-sel),.lock-asm .cac-filters .cac-fld:has(#asm-sel){display:none!important}
+</style><script src="d3.min.js"></script></head><body>
+<div class="cac-login" id="login"><form id="lf" autocomplete="on">
+<h1>CAC ASM Battle Board</h1><p>LG ES Channel South · đăng nhập bằng tài khoản được cấp</p>
+<label>Tài khoản<input type="text" id="lu" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
+<label>Mật khẩu<input type="password" id="lp" name="password" autocomplete="current-password" required></label>
+<label class="rm"><input type="checkbox" id="lr"> Ghi nhớ trên thiết bị này</label>
+<button type="submit" id="lb">Đăng nhập</button><div class="err" id="le" role="alert"></div>
+<p>Dữ liệu được mã hoá, chỉ mở được bằng đúng tài khoản và mật khẩu.</p></form></div>
+<div class="cac-user" id="who" hidden></div>
+<div id="dash-root">
+<script>
+window.__CAC_DATA__={};
+window.dash=(()=>{let fns=[],params={},ready=false;
+const run=()=>fns.forEach(f=>{try{f()}catch(e){console.error(e)}});
+let t;window.addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(run,150)});
+return {data:(id)=>ready?{status:'ok',data:window.__CAC_DATA__[id]||[],meta:[]}:{status:'loading',data:[],meta:[]},
+onData:(f)=>{fns.push(f);if(ready)f()},params:()=>params,
+setParams:(p)=>{params=Object.assign({},params,p,window.__CAC_LOCK__||{});run()},resetParams:()=>{params=Object.assign({},window.__CAC_LOCK__||{});run()},
+setLink:(n)=>{try{history.replaceState(null,'','#'+n)}catch(e){}},refresh:()=>{},colors:[],
+_boot:(d,lock)=>{window.__CAC_DATA__=d;window.__CAC_LOCK__=lock;params=Object.assign({},lock);ready=true;run()}};})();
+</script>
+<style>
+/* Layout: header + filter bar, then 3 tabs (Tổng quan ASM · Key SD H2 · Phân tầng shop); LG red as the single accent */
+.cac{--lg-red:#FD312E;--lg-heritage:#A50034;--lg-soft:color-mix(in srgb,#FD312E 9%,transparent);--lg-soft2:color-mix(in srgb,#A50034 14%,transparent);
+  position:relative;font-family:var(--font-anthropic-sans);display:flex;flex-direction:column;gap:var(--cds-gap-lg)}
+.cac *{box-sizing:border-box}
+.cac-head{display:flex;flex-direction:column;gap:var(--cds-gap-xs);border-left:4px solid var(--lg-red);padding-left:var(--cds-pad-md)}
+.cac-eyebrow{font-size:var(--cds-font-size-caption);letter-spacing:.06em;text-transform:uppercase;color:var(--color-fg-muted)}
+.cac-title{margin:0;font-size:var(--cds-font-size-title);font-weight:700;letter-spacing:-.01em;text-wrap:balance}
+.cac-take{margin:0;font-size:var(--cds-font-size-body);line-height:1.55;max-width:75ch}
+.cac-take b,.cac b{font-weight:650}
+.cac-bar{display:flex;flex-wrap:wrap;gap:var(--cds-gap-sm);align-items:center;justify-content:space-between}
+.cac-tabs{display:flex;flex-wrap:wrap;gap:var(--cds-gap-xs);background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:999px;padding:3px}
+.cac-tab{font:inherit;font-size:var(--cds-font-size-caption);border:0;background:transparent;color:var(--color-fg-muted);padding:6px 14px;border-radius:999px;cursor:pointer}
+.cac-tab[aria-selected="true"]{background:var(--lg-red);color:#fff;font-weight:600}
+.cac-tab:focus-visible,.cac button:focus-visible,.cac select:focus-visible,.cac input:focus-visible{outline:2px solid var(--lg-red);outline-offset:2px}
+.cac-filter{display:flex;gap:var(--cds-gap-xs);align-items:center;flex-wrap:wrap}
+.cac-filter label{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+.cac select,.cac input[type=search]{font:inherit;font-size:var(--cds-font-size-caption);padding:6px 10px;border:1px solid var(--color-border-line);border-radius:var(--cds-radius);background:var(--color-bg);color:var(--color-fg);min-width:0}
+.cac-chip{font:inherit;font-size:var(--cds-font-size-caption);border:1px solid var(--lg-red);color:var(--lg-red);background:var(--lg-soft);border-radius:999px;padding:4px 10px;cursor:pointer}
+.cac-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr));gap:var(--cds-gap-md)}
+.cac-tile{background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:var(--cds-pad-md);display:flex;flex-direction:column;gap:4px;min-width:0}
+.cac-tile .k{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+.cac-tile .v{font-size:var(--cds-font-size-title);font-weight:700;font-variant-numeric:tabular-nums;line-height:1.15}
+.cac-tile .s{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);font-variant-numeric:tabular-nums}
+.cac-tile.hero{border-top:3px solid var(--lg-red)}
+.up{color:var(--color-ok)} .dn{color:var(--color-bad)} .wn{color:var(--color-warn)}
+.cac-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,24rem),1fr));gap:var(--cds-gap-md)}
+.cac-card{background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:var(--cds-pad-lg);min-width:0;display:flex;flex-direction:column;gap:var(--cds-gap-sm)}
+.cac-card h3{margin:0;font-size:var(--cds-font-size-heading);font-weight:var(--cds-font-weight-medium);text-wrap:balance}
+.cac-note{margin:0;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);line-height:1.5}
+.cac-chart{min-height:220px;position:relative}
+.cac-scroll{overflow:auto;max-height:560px;border-top:1px solid var(--color-border-line)}
+.cac table{border-collapse:collapse;width:100%;font-size:var(--cds-font-size-caption);font-variant-numeric:tabular-nums}
+.cac th{position:sticky;top:0;background:var(--color-panel);text-align:left;font-weight:600;color:var(--color-fg-muted);padding:0;border-bottom:1px solid var(--color-border-line);z-index:1;white-space:nowrap}
+.cac th button{font:inherit;color:inherit;background:none;border:0;padding:8px 8px;cursor:pointer;width:100%;text-align:inherit}
+.cac th.n,.cac td.n{text-align:right}
+.cac td{padding:7px 8px;border-bottom:1px solid var(--color-border-line);vertical-align:top}
+.cac tr.click{cursor:pointer}
+.cac tr.click:hover td{background:var(--lg-soft)}
+.cac tr.sel td{background:var(--lg-soft2)}
+.cac td.wrap{min-width:12rem;white-space:normal}
+.cac td.nowrap{white-space:nowrap}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11px;white-space:nowrap;border:1px solid currentColor}
+.p1{color:var(--color-ok)} .p2{color:var(--color-ok)} .p3{color:var(--color-warn)} .p4{color:var(--color-warn)} .p5{color:var(--color-bad)}
+.rank{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;border-radius:999px;background:var(--lg-soft);color:var(--lg-heritage);font-weight:700}
+.rank.top{background:var(--lg-red);color:#fff}
+.prog{background-repeat:no-repeat;background-size:var(--w,0%) 4px;background-position:left bottom;background-image:linear-gradient(var(--lg-red),var(--lg-red))}
+.flag{color:var(--color-bad)}
+.cac-stack{display:flex;height:34px;border-radius:var(--cds-radius);overflow:hidden;gap:2px}
+.cac-stack>div{display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:var(--cds-font-size-caption);min-width:0}
+.cac-legend{display:flex;flex-wrap:wrap;gap:var(--cds-gap-sm);font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+.cac-legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.cac-quad{display:grid;grid-template-columns:auto 1fr 1fr;grid-template-rows:auto 1fr 1fr;gap:6px;font-size:var(--cds-font-size-caption)}
+.cac-quad .ax{color:var(--color-fg-muted);display:flex;align-items:center;justify-content:center;text-align:center}
+.cac-quad .ax.y{writing-mode:vertical-rl;transform:rotate(180deg)}
+.cac-q{font:inherit;text-align:left;border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:var(--cds-pad-md);background:var(--color-bg);color:var(--color-fg);cursor:pointer;display:flex;flex-direction:column;gap:2px;min-height:96px}
+.cac-q .t{font-weight:650}
+.cac-q .c{font-size:var(--cds-font-size-title);font-weight:700;font-variant-numeric:tabular-nums}
+.cac-q.hot{background:var(--lg-soft)}
+.cac-q[aria-pressed="true"]{border:2px solid var(--lg-red)}
+.cac-tip{position:absolute;pointer-events:none;background:var(--cds-surface-popover);border:1px solid var(--cds-border);border-radius:var(--cds-radius);box-shadow:var(--cds-shadow-popover);padding:var(--cds-pad-xs) var(--cds-pad-sm);font-size:var(--cds-font-size-caption);z-index:5;white-space:nowrap}
+.cac-tip .h{color:var(--cds-text-secondary)}
+.cac-method{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);line-height:1.6}
+.cac-method summary{cursor:pointer;color:var(--color-fg)}
+.cac-method ul{margin:6px 0;padding-left:18px}
+[data-dash-source-state=empty]{color:transparent}
+[data-dash-source-state=refreshing]{opacity:.5;transition:opacity var(--cds-dur-slow)}
+@media (max-width:640px){.hide-sm{display:none}}
+</style><style>
+.cac [hidden]{display:none!important}
+.cac-nav{font:inherit;font-size:16px;line-height:1;width:30px;height:30px;border:1px solid var(--color-border-line);border-radius:999px;background:var(--color-bg);color:var(--color-fg);cursor:pointer}
+.cac-nav:hover{border-color:var(--lg-red);color:var(--lg-red)}
+
+.cac-pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,13rem),1fr));gap:var(--cds-gap-sm)}
+.cac-pk{font:inherit;text-align:left;display:flex;gap:10px;align-items:flex-start;border:1px solid var(--color-border-line);border-radius:var(--cds-radius);background:var(--color-bg);color:var(--color-fg);padding:var(--cds-pad-sm) var(--cds-pad-md);cursor:pointer;min-width:0}
+.cac-pk:hover{border-color:var(--lg-red)}
+.cac-pk .t{display:flex;flex-direction:column;gap:2px;min-width:0}
+.cac-pk .nm{font-weight:650}
+.cac-pk .mt{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+#one-body{display:flex;flex-direction:column;gap:var(--cds-gap-md)}
+#one-body[hidden]{display:none}
+.cac-prof{display:flex;flex-wrap:wrap;gap:var(--cds-gap-md);align-items:center;justify-content:space-between;background:linear-gradient(120deg,var(--lg-soft2),var(--lg-soft) 55%,transparent);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:var(--cds-pad-lg)}
+.cac-prof .who{display:flex;flex-direction:column;gap:4px;min-width:0}
+.cac-prof .nm{font-size:var(--cds-font-size-title);font-weight:700;letter-spacing:-.01em}
+.cac-prof .mt{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+.cac-prof .flags{display:flex;flex-wrap:wrap;gap:6px}
+.cac-prof .big{display:flex;align-items:center;gap:10px}
+.cac-prof .big .rank{min-width:52px;height:52px;font-size:22px}
+.cac-tile .rk{font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;border:1px solid currentColor;align-self:flex-start}
+.cac-funnel{display:flex;flex-direction:column;gap:8px}
+.cac-fs{display:grid;grid-template-columns:minmax(9rem,38%) 1fr;gap:10px;align-items:center;font-size:var(--cds-font-size-caption)}
+.cac-fs .lb{color:var(--color-fg-muted)}
+.cac-fs .tr{position:relative;height:26px;background:var(--lg-soft);border-radius:4px;overflow:hidden}
+.cac-fs .br{height:100%;background:var(--cds-chart-muted);border-radius:4px}
+.cac-fs .br.hot{background:var(--lg-red)}
+.cac-fs .vl{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-weight:650;font-variant-numeric:tabular-nums;color:var(--color-fg)}
+.cac-seg{display:flex;flex-wrap:wrap;gap:6px}
+.cac-seg button{font:inherit;font-size:var(--cds-font-size-caption);border:1px solid var(--color-border-line);background:var(--color-bg);color:var(--color-fg);border-radius:999px;padding:5px 12px;cursor:pointer}
+.cac-seg button b{margin-left:4px;font-variant-numeric:tabular-nums}
+.cac-seg button[aria-pressed="true"]{border-color:var(--lg-red);background:var(--lg-soft);color:var(--lg-heritage);font-weight:600}
+#tb-ch td.q{min-width:18rem;line-height:1.5}
+#tb-ch td.a{min-width:12rem;color:var(--lg-heritage);font-weight:600}
+#tb-ch .tp{display:inline-block;font-size:11px;padding:1px 8px;border-radius:999px;background:var(--lg-soft);color:var(--lg-heritage);white-space:nowrap}
+.cac-lbl{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+.cac-scope{margin-right:var(--cds-gap-sm)}
+.cac-mix{display:flex;flex-direction:column;gap:8px}
+.cac-mix .cac-fs{grid-template-columns:minmax(14rem,34%) 1fr}
+.cac-filters{display:flex;flex-wrap:wrap;gap:var(--cds-gap-sm);align-items:flex-end;justify-content:flex-end;margin-left:auto}
+.cac-fld{display:flex;flex-direction:column;gap:3px;min-width:0}
+.cac-fld label{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--color-fg-muted)}
+.cac-fld select{width:13rem;max-width:100%;height:32px;font-weight:600}
+.cac-asmrow{display:flex;gap:4px;align-items:center}
+.cac-asmrow select{width:11.5rem}
+.cac-filters .cac-chip{height:32px}
+.cac-half{display:flex;flex-direction:column;gap:6px}
+.cac-hlab{font-size:var(--cds-font-size-caption);font-weight:650;color:var(--lg-heritage);letter-spacing:.02em}
+.cac-cmthead{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.cac-link{text-decoration:none;font-weight:600}
+#tb-cmt td.q{min-width:16rem;line-height:1.45}
+.cac-jump{display:flex;flex-wrap:wrap;gap:6px;position:sticky;top:env(safe-area-inset-top,0px);z-index:3;background:var(--color-bg);padding-block:6px}
+.cac-jump button{font:inherit;font-size:var(--cds-font-size-caption);border:1px solid var(--color-border-line);background:var(--color-panel);color:var(--color-fg);border-radius:999px;padding:4px 12px;cursor:pointer}
+.cac-jump button:hover{border-color:var(--lg-red);color:var(--lg-heritage)}
+.cac-sec{display:flex;align-items:center;gap:10px;margin:var(--cds-gap-md) 0 0;font-size:var(--cds-font-size-heading);font-weight:700;scroll-margin-top:48px}
+.cac-sec span{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:999px;background:var(--lg-red);color:#fff;font-size:13px}
+.cac-years{display:flex;flex-wrap:wrap;gap:var(--cds-gap-sm);align-items:stretch}
+.cac-yr{background:var(--color-bg);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:8px 12px;display:flex;flex-direction:column;gap:2px;min-width:120px;flex:1 1 120px}
+.cac-yr .k{font-size:11px;color:var(--color-fg-muted)} .cac-yr .v{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums} .cac-yr .s{font-size:11px;color:var(--color-fg-muted)}
+.cac-yrsep{width:1px;background:var(--color-border-line);margin-inline:4px}
+.cac-ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+.cac tr.tot td{font-weight:700;border-top:2px solid var(--color-border-line);background:var(--color-panel)}
+.cac tfoot tr.tot td{position:sticky;bottom:0}
+.cac td.hgrp,.cac th.hgrp{border-left:1px solid var(--color-border-line)}
+.cac td.ygrp,.cac th.ygrp{background:color-mix(in srgb,var(--lg-red) 5%,transparent)}
+.cac tr.deact td{color:var(--color-fg-muted)}
+#card-month .cac-chart{min-height:0}
+#tb-dl td:nth-child(2){max-width:20rem;overflow:hidden;text-overflow:ellipsis}
+</style>
+
+<style>.cac-eyebrow .eb-date{color:var(--lg-red);font-weight:600}.take-name{font-weight:700;text-transform:uppercase;color:var(--lg-red);letter-spacing:.02em}.take-name span{color:inherit}.take-list{margin:4px 0 0;padding-left:1.2em}.take-list li{margin:2px 0}</style>
+
+<style>.cac-ms{position:relative}
+.cac-msbtn{font:inherit;font-weight:600;width:13rem;max-width:100%;height:32px;text-align:left;padding:0 28px 0 10px;border:1px solid var(--color-border-line);border-radius:6px;background:var(--color-bg) no-repeat right 10px center/10px 6px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23888' stroke-width='1.5'/%3E%3C/svg%3E");color:var(--color-fg);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cac-msbtn:hover,.cac-msbtn[aria-expanded="true"]{border-color:var(--lg-red)}
+.cac-mspop{position:absolute;top:100%;left:0;z-index:30;margin-top:4px;min-width:15.5rem;padding:6px;border:1px solid var(--color-border-line);border-radius:8px;background:var(--color-bg);box-shadow:0 6px 20px rgba(0,0,0,.14);display:flex;flex-direction:column;gap:2px}
+.cac-mspop label{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;font-size:14px;text-transform:none;letter-spacing:0;color:var(--color-fg);cursor:pointer;white-space:nowrap}
+.cac-mspop label:hover{background:var(--lg-soft)}
+.cac-mspop input{accent-color:var(--lg-red);width:16px;height:16px;margin:0}</style>
+
+<style>.take-risk,.take-risk span{color:var(--color-bad)}.take-risk::marker{color:var(--color-bad)}</style>
+
+<style>.cac .tgt-ach{min-width:9rem;white-space:nowrap}
+.cac .tb{position:relative;display:inline-block;vertical-align:middle;width:70px;height:8px;border-radius:4px;background:var(--color-border-line);margin-right:8px;overflow:visible}
+.cac .tb .tf{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--lg-red)}
+.cac .tb .tf.ok{background:var(--color-ok)}
+.cac .tb .tm{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--color-fg);transform:translateX(-1px)}
+.cac .tb.big{display:block;width:100%;height:14px;border-radius:7px;margin:6px 0 2px}
+.cac .tb.big .tf{border-radius:7px}
+.cac-tgtbar{margin-bottom:var(--cds-gap-md)}
+.cac-tgtbar .tl{font-weight:600}
+.cac tr.miss td{background:color-mix(in srgb,var(--lg-red) 7%,transparent)}
+.cac-lnk{font:inherit;font-weight:600;border:0;background:none;padding:0;color:var(--color-fg);cursor:pointer;text-decoration:underline;text-decoration-color:var(--color-border-line);text-underline-offset:3px}
+.cac-lnk:hover{color:var(--lg-red)}</style>
+<div class="cac" id="cac">
+  <header class="cac-head" id="top">
+    <span class="cac-eyebrow" id="eyebrow"><span class="eb-date">số liệu đến 24/10/2026</span> · LG ES Channel South · CAC Sell-out (MRP) · Sub-D · Cross Sales</span>
+    <h1 class="cac-title">CAC ASM Battle Board</h1>
+    <div class="cac-take" id="take"><span class="dash-skeleton">—</span></div>
+  </header>
+
+  <div class="cac-bar">
+    <div class="cac-tabs" role="tablist" aria-label="Trang">
+      <button class="cac-tab" role="tab" id="tab-one" data-tab="one" aria-selected="true">1 · 1:1 ASM</button>
+      <button class="cac-tab" role="tab" id="tab-keysd" data-tab="keysd" aria-selected="false">2 · Key SD</button>
+      <button class="cac-tab" role="tab" id="tab-tier" data-tab="tier" aria-selected="false">3 · All Sub-D</button>
+    </div>
+    <div class="cac-filters">
+      <div class="cac-fld cac-ms"><label id="xs-lab">Cross Sales</label>
+        <button type="button" class="cac-msbtn" id="xs-btn" aria-haspopup="true" aria-expanded="false" aria-labelledby="xs-lab xs-btn"><span id="xs-txt">N + Y-WS</span></button>
+        <div class="cac-mspop" id="xs-pop" role="group" aria-label="Cross Sales" hidden>
+          <label><input type="checkbox" value="n"> N · đúng tuyến</label>
+          <label><input type="checkbox" value="ws"> Y-WS · trái tuyến, channel</label>
+          <label><input type="checkbox" value="pj"> Y-PJ · trái tuyến, project</label>
+        </div></div>
+      <div class="cac-fld"><label for="sup-sel">Salesman</label>
+        <select id="sup-sel" data-source="asm_scorecard" aria-label="Salesman"></select></div>
+      <div class="cac-fld"><label for="asm-sel">ASM</label>
+        <div class="cac-asmrow"><button class="cac-nav" id="asm-prev" aria-label="ASM trước">‹</button><select id="asm-sel" data-source="asm_scorecard" aria-label="ASM"></select><button class="cac-nav" id="asm-next" aria-label="ASM kế tiếp">›</button></div></div>
+      <button class="cac-chip" id="asm-clear" hidden>Bỏ lọc ×</button>
+    </div>
+  </div>
+
+  <!-- ============ TAB 1: 1:1 ASM ============ -->
+  <section id="one" data-page="one">
+    <div class="cac-card" id="card-tgt-team">
+      <h3 id="tgt-team-title">Target &amp; Perf tháng 10/2026 · team ASM</h3>
+      <p class="cac-note" id="tgt-team-note">S.Out triệu VND giá MRP, mọi Bill to, Sub-D (cùng cách tính bảng target của team). Thanh đỏ = % đạt; vạch đen = % thời gian đã qua. Dự kiến = nhịp ngày hiện tại × số ngày của tháng.</p>
+      <div class="cac-scroll">
+        <table id="tb-tgt" data-source="asm_target" data-row-key="asm">
+          <thead><tr>
+            <th data-field="asm"><button>ASM</button></th>
+            <th class="n" data-field="tgt_so"><button>Target SO</button></th>
+            <th class="n" data-field="mtd_so"><button>Đạt MTD</button></th>
+            <th data-field="ach"><button>% đạt</button></th>
+            <th class="n" data-field="proj"><button>Dự kiến cuối tháng</button></th>
+            <th class="n" data-field="proj_ach"><button>% dự kiến</button></th>
+            <th class="n" data-field="gap"><button>Còn thiếu</button></th>
+            <th class="n" data-field="need_day"><button>Cần/ngày</button></th>
+            <th class="n" data-field="tgt_cover"><button>Target Cover</button></th>
+            <th class="n" data-field="cover"><button>Cover đạt</button></th>
+            <th class="n" data-field="mtd_py"><button>Cùng kỳ T10/25</button></th>
+          </tr></thead><tbody></tbody><tfoot></tfoot>
+        </table>
+      </div>
+    </div>
+
+    <div id="one-pick" class="cac-card">
+      <h3>Chọn ASM để bắt đầu 1:1</h3>
+      <p class="cac-note">Xếp theo hạng. Mỗi thẻ: tên ASM, zone, tăng trưởng S.Out YTD (01/01–24/10) so với cùng kỳ 2025.</p>
+      <div class="cac-pick" id="pick" data-source="asm_scorecard"></div>
+    </div>
+
+    <div id="one-body" hidden>
+      <nav class="cac-jump" aria-label="Đi tới phần">
+        <button data-go="sec-cmt">A · Cam kết</button><button data-go="sec-tgt">B · Target tháng</button><button data-go="sec-sales">C · Doanh số 3 năm</button><button data-go="sec-cover">D · Độ phủ</button><button data-go="sec-dealers">E · Đại lý 3 năm</button><button data-go="sec-req">F · Câu hỏi & hành động</button>
+      </nav>
+      <div class="cac-prof" id="prof" data-source="asm_scorecard"></div>
+
+      <div class="cac-tiles" id="one-tiles" data-source="asm_scorecard"></div>
+
+
+      <h2 class="cac-sec" id="sec-cmt"><span>A</span>Đối chiếu cam kết buổi trước</h2>
+      <div class="cac-card" id="card-cmt">
+        <div class="cac-cmthead"><h3 id="cmt-title">Cam kết từ các buổi 1:1 trước</h3>
+          <a class="cac-chip cac-link" href="https://claude.ai/artifact/UUh9REfQ5Tb62s65uwfNaY" target="_blank" rel="noopener">Mở trang ghi cam kết ↗</a></div>
+        <p class="cac-note" id="cmt-note">Đối chiếu trước khi hỏi chuyện mới. Ghi và cập nhật kết quả ở trang "Cam kết 1:1 ASM"; bảng dưới là bản chép lại mỗi lần làm mới số liệu dashboard.</p>
+        <div class="cac-scroll" style="max-height:300px">
+          <table id="tb-cmt" data-source="commitments" data-row-key="id">
+            <thead><tr>
+              <th data-field="meeting_date"><button>Ngày họp</button></th>
+              <th data-field="topic"><button>Chủ đề</button></th>
+              <th data-field="content"><button>Cam kết</button></th>
+              <th data-field="target"><button>Con số</button></th>
+              <th data-field="due"><button>Hạn</button></th>
+              <th data-field="status"><button>Trạng thái</button></th>
+              <th data-field="result"><button>Kết quả</button></th>
+            </tr></thead><tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <h2 class="cac-sec" id="sec-tgt"><span>B</span>Target &amp; Perf tháng hiện tại</h2>
+      <div class="cac-card" id="card-tgt">
+        <h3 id="tgt-title">Tháng 10/2026</h3>
+        <p class="cac-note" id="tgt-note">S.Out triệu VND giá MRP, mọi Bill to, Sub-D, cùng cách tính bảng target của team.</p>
+        <div class="cac-tgtbar" id="tgt-bar" data-source="asm_target"></div>
+        <div class="cac-tiles" id="tgt-tiles" data-source="asm_target"></div>
+      </div>
+      <div class="cac-card" id="card-mshop">
+        <h3 id="mshop-title">Shop tháng này: ai đang mua, ai chưa mua</h3>
+        <p class="cac-note">Shop có S.Out tháng 10/2026, 3 tháng trước (T7–T9/2026) hoặc cùng kỳ T10/2025, gồm cả shop Deactive. Dòng nền đỏ nhạt = 3 tháng trước hoặc cùng kỳ có mua nhưng tháng này chưa mua, gọi chốt đơn trước. Cover = shop mới hoặc kích hoạt lại (2 tháng trước không mua).</p>
+        <div class="cac-filter">
+          <select id="ms-f" aria-label="Lọc shop tháng"><option value="">Tất cả</option><option value="buy">Đang mua tháng này</option><option value="miss">Chưa mua tháng này</option><option value="cover">Cover (mới/kích hoạt lại)</option></select>
+        </div>
+        <div class="cac-scroll" style="max-height:420px">
+          <table id="tb-ms" data-source="asm_month_shops" data-row-key="code">
+            <thead><tr>
+              <th data-field="code"><button>Mã</button></th><th data-field="name"><button>Tên shop</button></th><th data-field="province"><button>Tỉnh</button></th>
+              <th class="n" data-field="mtd"><button>T10/26 MTD</button></th><th class="n" data-field="last_m"><button>T9/26</button></th><th class="n" data-field="m_2"><button>T8/26</button></th><th class="n" data-field="m_3"><button>T7/26</button></th><th class="n" data-field="ly_m"><button>T10/25</button></th>
+              <th data-field="cover"><button>Cover</button></th><th data-field="last_so"><button>S.Out cuối</button></th><th data-field="status"><button>Status</button></th>
+            </tr></thead><tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <h2 class="cac-sec" id="sec-sales"><span>C</span>Doanh số</h2>
+      <div class="cac-card" id="card-month">
+        <h3 id="month-title">Tiến độ doanh số theo năm</h3>
+        <p class="cac-note" id="month-note">Tỷ VND, giá MRP. Mỗi thanh là cả năm: phần đậm = 01/01–24/10 (YTD), phần nhạt = 25/10–31/12. Thanh 2026: phần đỏ nhạt là dự kiến đến 31/12 theo mùa vụ 2024–2025 của South. Vạch dọc = mốc bằng 2025 và +10%, +20%. Doanh số quá khứ tính cả shop nay đã Deactive, vì đó là dung lượng thật của thị trường khu vực, làm nền đặt target tăng trưởng cho ASM.</p>
+        <div class="cac-years" id="yr-strip" data-source="asm_scorecard"></div>
+        <div class="cac-chart" id="ch-month" data-source="asm_scorecard"></div>
+        <h3 id="need-title" style="margin-top:var(--cds-gap-md)">Cần nỗ lực thêm bao nhiêu từ nay đến 31/12?</h3>
+        <div class="cac-scroll">
+          <table id="tb-need" data-source="asm_scorecard">
+            <thead><tr><th>Mục tiêu cả năm 2026</th><th class="n">Cả năm (tỷ)</th><th class="n">Còn phải bán (tỷ)</th><th class="n">Tỷ/tháng</th><th class="n">Gấp nhịp YTD/2026</th><th class="n">Gấp cùng kỳ 25/10–31/12/2025</th></tr></thead><tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="cac-card" id="card-src">
+        <h3 id="src-title">Nguồn hàng: Sub-D khu vực lấy hàng qua ai?</h3>
+        <p class="cac-note">Tính trên mọi Bill to, không phụ thuộc nút lọc phía trên. N = đúng tuyến NPP miền Nam · Y-WS = trái tuyến qua NPP miền Bắc/Trung · Y-PJ = sai kênh qua nhà thầu dự án ES Project. Tỷ VND, giá MRP.</p>
+        <div class="cac-mix" id="src-mix" data-source="asm_source_mix"></div>
+        <div class="cac-scroll" style="max-height:360px">
+          <table id="tb-src" data-source="asm_source" data-row-key="key">
+            <thead><tr>
+              <th data-field="name"><button>Bill to (khách hàng xuất hoá đơn)</button></th>
+              <th data-field="cross"><button>Cross Sales</button></th>
+              <th class="n" data-field="so_2024"><button>2024</button></th>
+              <th class="n" data-field="so_2025"><button>2025</button></th>
+              <th class="n" data-field="ytd_2026"><button>YTD/26</button></th>
+              <th class="n" data-field="share_2026"><button>Tỷ trọng YTD/26</button></th>
+              <th class="n" data-field="stores_2026"><button>Shop 2026</button></th>
+            </tr></thead><tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="cac-card" id="card-prov">
+        <h3>Doanh số theo tỉnh</h3>
+        <p class="cac-note">S.Out tỷ VND (MRP). Vùng trắng = shop Active chưa từng mua CAC 2024–2026.</p>
+        <div class="cac-scroll" style="max-height:none">
+          <table id="tb-prov" data-source="asm_province" data-row-key="key">
+            <thead><tr>
+              <th data-field="province"><button>Tỉnh</button></th>
+              <th class="n" data-field="active_base"><button>Shop Active</button></th>
+              <th class="n" data-field="buying_2026"><button>Có mua 2026</button></th>
+              <th class="n" data-field="pen_2026"><button>Phủ</button></th>
+              <th class="n" data-field="ytd_2025"><button>YTD/25</button></th>
+              <th class="n" data-field="ytd_2026"><button>YTD/26</button></th>
+              <th class="n" data-field="gr_ytd"><button>GR %</button></th>
+              <th class="n" data-field="gap_ytd"><button>Δ tỷ</button></th>
+              <th class="n" data-field="new_2026"><button>Mới</button></th>
+              <th class="n" data-field="lost_2026"><button>Mất</button></th>
+              <th class="n" data-field="white_space"><button>Vùng trắng</button></th>
+              <th class="n" data-field="keysd"><button>Key SD</button></th>
+            </tr></thead><tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <h2 class="cac-sec" id="sec-cover"><span>D</span>Độ phủ và mở rộng hệ thống</h2>
+      <div class="cac-card" id="card-cover">
+        <h3 id="cover-title">Độ phủ trên shop đang Active: mở thêm bao nhiêu shop?</h3>
+        <p class="cac-note">Gốc tính = shop đang Active trong file mapping (theo tỉnh cũ). Phủ = số shop Active có S.Out CAC trong năm ÷ tổng shop Active. "Từng mua, 2026 chưa mua" = shop Active đã mua 2024–2025 nhưng YTD/2026 chưa có S.Out, cần kích hoạt lại. "Chưa từng mua" = vùng trắng. "Cần mở thêm" = số shop có S.Out 2026 cần thêm để bằng mức phủ trung bình South.</p>
+        <div class="cac-scroll" style="max-height:none">
+          <table id="tb-cover" data-source="asm_coverage" data-row-key="key">
+            <thead><tr>
+              <th data-field="province"><button>Tỉnh</button></th>
+              <th class="n" data-field="active"><button>Shop Active</button></th>
+              <th class="n" data-field="b24"><button>Mua 2024</button></th>
+              <th class="n" data-field="b25"><button>Mua 2025</button></th>
+              <th class="n" data-field="b26"><button>Mua YTD/26</button></th>
+              <th class="n" data-field="pen24"><button>Phủ 2024</button></th>
+              <th class="n" data-field="pen25"><button>Phủ 2025</button></th>
+              <th class="n" data-field="pen26"><button>Phủ 2026</button></th>
+              <th class="n" data-field="sleep"><button>Từng mua, 2026 chưa mua</button></th>
+              <th class="n" data-field="never"><button>Chưa từng mua</button></th>
+              <th class="n" data-field="need_south"><button>Cần mở thêm</button></th>
+            </tr></thead><tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="cac-grid">
+        <div class="cac-card" id="card-funnel">
+          <h3>Phễu hệ thống Sub-D: rơi rụng ở đâu?</h3>
+          <p class="cac-note">Chỉ tính shop đang Active trong mapping. % = so với tổng shop Active.</p>
+          <div class="cac-funnel" id="funnel" data-source="asm_scorecard"></div>
+        </div>
+        <div class="cac-card" id="card-cover-note">
+          <h3>Đọc bảng độ phủ thế nào</h3>
+          <ul class="cac-note cac-ul">
+            <li>Phủ giảm từ 2025 sang 2026 trong khi shop Active không đổi: shop cũ đang bỏ CAC. Ưu tiên cột "Từng mua, 2026 chưa mua".</li>
+            <li>Phủ thấp và "Chưa từng mua" lớn: thị trường chưa được khai phá. Lấy danh sách ở tab "Vùng trắng" bên dưới.</li>
+            <li>"Cần mở thêm" là con số tối thiểu để bằng mức trung bình South. Chốt con số này vào cam kết 1:1.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2 class="cac-sec" id="sec-dealers"><span>E</span>Đại lý 3 năm</h2>
+      <div class="cac-card" id="card-dl">
+        <h3 id="dl-title">Đại lý có S.Out trong 3 năm</h3>
+        <p class="cac-note">Triệu VND, giá MRP. 6 tháng đầu (1H) và 6 tháng cuối (2H) mỗi năm; 2H/26 mới có T7 đến 24/10. Ô trống = không có S.Out. Cột "1H/26 vs 1H/25" so cùng kỳ nửa năm. Dòng cuối là tổng của các shop đang hiển thị.</p>
+        <div class="cac-filter">
+          <input type="search" id="dl-q" placeholder="Tìm shop, mã, tỉnh…" aria-label="Tìm đại lý">
+          <select id="dl-status" aria-label="Lọc Status"><option value="">Active + Deactive</option><option value="Active">Chỉ Active</option><option value="Deactive">Chỉ Deactive</option></select>
+          <select id="dl-prov" aria-label="Lọc tỉnh"><option value="">Tất cả tỉnh</option></select>
+        </div>
+        <div class="cac-scroll">
+          <table id="tb-dl" data-source="store_tiering" data-row-key="code">
+            <thead><tr>
+              <th data-field="code"><button>Mã</button></th>
+              <th data-field="name"><button>Đại lý</button></th>
+              <th data-field="province"><button>Tỉnh</button></th>
+              <th class="n hgrp" data-field="h1_24"><button>1H/24</button></th>
+              <th class="n" data-field="h2_24"><button>2H/24</button></th>
+              <th class="n hgrp" data-field="h1_25"><button>1H/25</button></th>
+              <th class="n" data-field="h2_25"><button>2H/25</button></th>
+              <th class="n hgrp" data-field="h1_26"><button>1H/26</button></th>
+              <th class="n" data-field="h2_26"><button>2H/26*</button></th>
+              <th class="n" data-field="h1_vs"><button>1H/26 vs 1H/25</button></th>
+              <th class="n ygrp" data-field="so_2024"><button>Năm 2024</button></th>
+              <th class="n ygrp" data-field="so_2025"><button>Năm 2025</button></th>
+              <th class="n ygrp" data-field="ytd_2026"><button>YTD/2026</button></th>
+              <th data-field="map_status"><button>Status</button></th>
+            </tr></thead><tbody></tbody><tfoot></tfoot>
+          </table>
+        </div>
+      </div>
+
+      <h2 class="cac-sec" id="sec-req"><span>F</span>Câu hỏi và hành động cho ASM</h2>
+      <div class="cac-card" id="card-ch">
+        <h3 id="ch-title">Câu hỏi challenge hôm nay</h3>
+        <p class="cac-note">Sinh tự động từ số liệu của ASM. Mỗi câu kèm yêu cầu cụ thể để ASM trả lời hoặc cam kết ngay trong buổi 1:1. Khi lọc Y-WS hoặc Y-PJ, câu hỏi vẫn tính theo Channel.</p>
+        <div class="cac-scroll" style="max-height:none">
+          <table id="tb-ch" data-source="challenges" data-row-key="id">
+            <thead><tr>
+              <th class="n" data-field="no"><button>#</button></th>
+              <th data-field="topic"><button>Chủ đề</button></th>
+              <th data-field="question"><button>Câu hỏi cho ASM</button></th>
+              <th data-field="ask"><button>Yêu cầu / cam kết</button></th>
+            </tr></thead><tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="cac-card" id="card-lists">
+        <h3>Danh sách hành động</h3>
+        <div class="cac-seg" role="tablist" aria-label="Danh sách" id="seg">
+          <button data-list="lost" aria-pressed="true">Lấy lại shop mất <b id="n-lost" data-source="asm_scorecard" data-field="w_lost">—</b></button>
+          <button data-list="cool" aria-pressed="false">Đang nguội <b id="n-cool" data-source="asm_scorecard" data-field="w_cool">—</b></button>
+          <button data-list="up" aria-pressed="false">Đang lên <b id="n-up" data-source="asm_scorecard" data-field="w_up">—</b></button>
+          <button data-list="oks" aria-pressed="false">Key SD H2 <b id="n-ks" data-source="asm_scorecard" data-field="keysd">—</b></button>
+          <button data-list="ws" aria-pressed="false">Vùng trắng <b id="n-ws" data-source="asm_scorecard" data-field="white_space">—</b></button>
+        </div>
+        <p class="cac-note" id="list-note"></p>
+        <div class="cac-scroll">
+          <table id="tb-lost" data-list="lost" data-source="store_tiering" data-row-key="code">
+            <thead><tr><th data-field="code"><button>Mã</button></th><th data-field="name"><button>Shop</button></th><th data-field="province"><button>Tỉnh</button></th>
+              <th class="n" data-field="so_2024"><button>2024 (tr)</button></th><th class="n" data-field="so_2025"><button>2025 (tr)</button></th>
+              <th data-field="last_so"><button>S.Out cuối</button></th><th class="n" data-field="days_since"><button>Số ngày</button></th><th data-field="key_grade"><button>Key SD</button></th><th data-field="src_main"><button>Nguồn hàng chính</button></th></tr></thead><tbody></tbody>
+          </table>
+          <table id="tb-cool" data-list="cool" data-source="store_tiering" data-row-key="code" hidden>
+            <thead><tr><th data-field="code"><button>Mã</button></th><th data-field="name"><button>Shop</button></th><th data-field="province"><button>Tỉnh</button></th>
+              <th class="n" data-field="ytd_2025"><button>YTD/25 (tr)</button></th><th class="n" data-field="ytd_2026"><button>YTD/26 (tr)</button></th><th class="n" data-field="gr_ytd"><button>GR %</button></th>
+              <th class="n" data-field="q3_2025"><button>2H/25 cùng kỳ</button></th><th class="n" data-field="q3_2026"><button>2H/26 đến nay</button></th>
+              <th class="n" data-field="days_since"><button>Ngày từ S.Out cuối</button></th><th data-field="key_grade"><button>Key SD</button></th><th data-field="src_main"><button>Nguồn hàng chính</button></th></tr></thead><tbody></tbody>
+          </table>
+          <table id="tb-up" data-list="up" data-source="store_tiering" data-row-key="code" hidden>
+            <thead><tr><th data-field="code"><button>Mã</button></th><th data-field="name"><button>Shop</button></th><th data-field="province"><button>Tỉnh</button></th>
+              <th class="n" data-field="ytd_2025"><button>YTD/25 (tr)</button></th><th class="n" data-field="ytd_2026"><button>YTD/26 (tr)</button></th><th class="n" data-field="gr_ytd"><button>GR %</button></th>
+              <th class="n" data-field="months_6m"><button>Tháng có S.Out (6 tháng)</button></th><th data-field="new_flag"><button>Biến động</button></th><th data-field="keysd_candidate"><button>Ứng viên</button></th><th data-field="src_main"><button>Nguồn hàng chính</button></th></tr></thead><tbody></tbody>
+          </table>
+          <table id="tb-oks" data-list="oks" data-source="keysd_h2" data-row-key="code" hidden>
+            <thead><tr><th data-field="name"><button>Key SD</button></th><th data-field="grade"><button>Hạng</button></th>
+              <th class="n" data-field="m7"><button>T7</button></th><th class="n" data-field="m8"><button>T8</button></th><th class="n" data-field="m9"><button>T9</button></th><th class="n" data-field="m10"><button>T10*</button></th>
+              <th class="n" data-field="h2_td"><button>DS H2</button></th><th data-field="tier_now"><button>Mốc</button></th><th data-field="next_tier"><button>Mốc kế</button></th>
+              <th class="n" data-field="gap_next"><button>Thiếu</button></th><th class="n" data-field="need_pm"><button>Cần/tháng</button></th>
+              <th class="n" data-field="days_since"><button>Ngày từ S.Out cuối</button></th><th data-field="status"><button>Trạng thái</button></th></tr></thead><tbody></tbody>
+          </table>
+          <table id="tb-ws" data-list="ws" data-source="white_space" data-row-key="code" hidden>
+            <thead><tr><th data-field="code"><button>Mã</button></th><th data-field="name"><button>Shop</button></th><th data-field="province"><button>Tỉnh</button></th></tr></thead><tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TAB 2: Key SD ============ -->
+  <section id="keysd" data-page="keysd" hidden>
+    <div style="display:flex;flex-direction:column;gap:var(--cds-gap-md)">
+      <div class="cac-half">
+        <div class="cac-hlab">1H · 10/01 – 30/06/2026 · đã chốt</div>
+        <div class="cac-tiles">
+          <div class="cac-tile"><span class="k">Key SD đạt mốc 1H</span><span class="v"><span id="k1-hit" data-source="asm_scorecard" data-field="ks1_hit">—</span> / <span id="k1-n" data-source="asm_scorecard" data-field="keysd">—</span></span><span class="s"><span id="k1-zero" class="dn" data-source="asm_scorecard" data-field="ks1_zero">—</span> Key SD không có S.Out 1H</span></div>
+          <div class="cac-tile"><span class="k">DS chương trình 1H (tỷ)</span><span class="v" id="k1-ds" data-source="asm_scorecard" data-field="keysd_h1">—</span><span class="s">MRP ÷ 1,1 × 0,8</span></div>
+          <div class="cac-tile"><span class="k">Thưởng 1H (triệu)</span><span class="v" id="k1-inc" data-source="asm_scorecard" data-field="keysd_inc_h1">—</span><span class="s">Theo mốc đạt 30/06</span></div>
+        </div>
+      </div>
+      <div class="cac-half">
+        <div class="cac-hlab">2H · 01/07 – 31/12/2026 · đang chạy (số liệu đến 24/10)</div>
+        <div class="cac-tiles">
+          <div class="cac-tile hero"><span class="k">Key SD đạt / dự kiến đạt mốc 2H</span><span class="v"><span id="k-ok" data-source="asm_scorecard" data-field="keysd_ok">—</span> / <span id="k-n" data-source="asm_scorecard" data-field="keysd">—</span></span><span class="s">Tỷ lệ: <b id="k-rate" data-source="asm_scorecard" data-field="keysd_ok_rate">—</b> · <span id="k-zero" class="dn" data-source="asm_scorecard" data-field="keysd_zero">—</span> chưa có S.Out 2H</span></div>
+          <div class="cac-tile"><span class="k">DS chương trình 2H đến nay (tỷ)</span><span class="v" id="k-h2" data-source="asm_scorecard" data-field="keysd_h2">—</span><span class="s">01/07 → 24/10/2026</span></div>
+          <div class="cac-tile"><span class="k">Thưởng 2H tạm tính (triệu)</span><span class="v" id="k-inc" data-source="asm_scorecard" data-field="keysd_inc">—</span><span class="s">Nếu chốt tại 24/10</span></div>
+          <div class="cac-tile"><span class="k">Thưởng 2H dự kiến 31/12 (triệu)</span><span class="v" id="k-pinc" data-source="asm_scorecard" data-field="keysd_proj_inc">—</span><span class="s">Theo mùa vụ H2 (×1,73)</span></div>
+        </div>
+      </div>
+
+      <div class="cac-card" id="card-status">
+        <h3 id="status-title">Key SD theo trạng thái mốc thưởng</h3>
+        <div class="cac-stack" id="ks-stack" data-source="asm_scorecard"></div>
+        <div class="cac-legend" id="ks-legend"></div>
+        <p class="cac-note">Trạng thái tính cho 2H. Mốc 1H và 2H giống nhau. Diamond: C ≥ 2,0 tỷ (1,5%), B ≥ 2,5 tỷ (2%), cộng thêm 2% khi ≥ 5,0 tỷ. Gold: C ≥ 0,7 tỷ (1%), B ≥ 1,2 tỷ (1,3%), A ≥ 1,5 tỷ (1,6%). Dự kiến 31/12 = DS H2 đến nay × 1,73 (tỷ lệ cả H2 / H2 tới 24/10, trung bình 2024–2025 của Sub-D).</p>
+      </div>
+
+      <div class="cac-card" id="card-ks">
+        <h3>Danh sách Key SD: 1H đã đạt gì, 2H còn thiếu bao nhiêu</h3>
+        <p class="cac-note">Triệu VND theo giá chương trình (MRP ÷ 1,1 × 0,8). "Nhịp 2H vs 1H" = DS trung bình/tháng của 2H (01/07–24/10, 3,8 tháng) so với trung bình/tháng của 1H: âm là đang bán chậm hơn 1H. "Cần/tháng" = phần thiếu tới mốc kế 2H ÷ 2,2 tháng còn lại. Gạch đỏ dưới DS 2H = % tới mốc kế.</p>
+        <div class="cac-filter"><input type="search" id="ks-q" placeholder="Tìm shop, mã, tỉnh…" aria-label="Tìm Key SD"></div>
+        <div class="cac-scroll">
+          <table id="tb-ks" data-source="keysd_h2" data-row-key="code">
+            <thead><tr>
+              <th data-field="name"><button>Key SD</button></th>
+              <th data-field="grade"><button>Hạng</button></th>
+              <th class="hide-sm" data-field="asm"><button>ASM</button></th>
+              <th class="n" data-field="h1_2026"><button>DS 1H</button></th>
+              <th data-field="h1_tier"><button>Mốc 1H</button></th>
+              <th class="n hide-sm" data-field="h1_inc"><button>Thưởng 1H</button></th>
+              <th class="n hide-sm" data-field="m7"><button>T7</button></th>
+              <th class="n hide-sm" data-field="m8"><button>T8</button></th>
+              <th class="n hide-sm" data-field="m9"><button>T9</button></th>
+              <th class="n hide-sm" data-field="m10"><button>T10*</button></th>
+              <th class="n" data-field="h2_td"><button>DS 2H</button></th>
+              <th class="n" data-field="h2_vs_h1"><button>Nhịp 2H vs 1H</button></th>
+              <th data-field="tier_now"><button>Mốc 2H</button></th>
+              <th data-field="next_tier"><button>Mốc kế</button></th>
+              <th class="n" data-field="gap_next"><button>Thiếu</button></th>
+              <th class="n" data-field="need_pm"><button>Cần/tháng</button></th>
+              <th class="n" data-field="push_x"><button>× nhịp 2H</button></th>
+              <th class="n hide-sm" data-field="proj_dec"><button>Dự kiến 31/12</button></th>
+              <th class="n hide-sm" data-field="days_since"><button>Ngày từ S.Out cuối</button></th>
+              <th data-field="status"><button>Trạng thái</button></th>
+              <th data-field="flags"><button>Cờ</button></th>
+            </tr></thead><tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TAB 3: All Sub-D ============ -->
+  <section id="tier" data-page="tier" hidden>
+    <div style="display:flex;flex-direction:column;gap:var(--cds-gap-md)">
+      <div class="cac-card" id="card-stt">
+        <h3 id="stt-title">All Sub-D: Active và Deactive</h3>
+        <p class="cac-note">Shop Sub-D có S.Out CAC 2024–2026, chia theo Status hiện tại trong file mapping. Shop đã Deactive vẫn được tính vào doanh số của năm shop còn bán, để thấy đúng dung lượng thị trường từng thời điểm. Tỷ VND, giá MRP.</p>
+        <div class="cac-scroll" style="max-height:none">
+          <table id="tb-stt" data-source="asm_scorecard">
+            <thead><tr><th>Status</th><th class="n">Số shop có S.Out</th><th class="n">Có S.Out 2026</th><th class="n">2024</th><th class="n">2025</th><th class="n">YTD/25</th><th class="n">YTD/26</th></tr></thead><tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="cac-grid">
+        <div class="cac-card" id="card-quad">
+          <h3>Ma trận Quy mô × Gắn kết</h3>
+          <p class="cac-note">Shop Sub-D có S.Out CAC 2024–2026. Mỗi trục 0–10 điểm, ngưỡng cao ≥ 6. Bấm ô để lọc bảng. Số dưới = S.Out 12 tháng gần nhất (tỷ).</p>
+          <div class="cac-quad" data-source="asm_scorecard">
+            <div></div><div class="ax">Gắn kết cao</div><div class="ax">Gắn kết thấp</div>
+            <div class="ax y">Quy mô cao</div>
+            <button class="cac-q hot" data-tier="A · Lõi" aria-pressed="false"><span class="t">A · Lõi</span><span class="c" id="q-A" data-source="asm_scorecard" data-field="tierA">—</span><span class="s"><span id="q-lA" data-source="asm_scorecard" data-field="l12_A">—</span> tỷ · Giữ &amp; nâng mốc</span></button>
+            <button class="cac-q hot" data-tier="B · Kích hoạt lại" aria-pressed="false"><span class="t">B · Kích hoạt lại</span><span class="c dn" id="q-B" data-source="asm_scorecard" data-field="tierB">—</span><span class="s"><span id="q-lB" data-source="asm_scorecard" data-field="l12_B">—</span> tỷ · Gặp chủ shop trong 7 ngày</span></button>
+            <div class="ax y">Quy mô thấp</div>
+            <button class="cac-q" data-tier="C · Đang lên" aria-pressed="false"><span class="t">C · Đang lên</span><span class="c up" id="q-C" data-source="asm_scorecard" data-field="tierC">—</span><span class="s"><span id="q-lC" data-source="asm_scorecard" data-field="l12_C">—</span> tỷ · Nuôi, mở thêm model</span></button>
+            <button class="cac-q" data-tier="D · Đuôi dài" aria-pressed="false"><span class="t">D · Đuôi dài</span><span class="c" id="q-D" data-source="asm_scorecard" data-field="tierD">—</span><span class="s"><span id="q-lD" data-source="asm_scorecard" data-field="l12_D">—</span> tỷ · Duy trì qua NPP</span></button>
+          </div>
+        </div>
+        <div class="cac-card" id="card-cand">
+          <h3>Ứng viên Key SD kỳ tới</h3>
+          <p class="cac-note">Shop chưa vào list Key SD (cả S.Out lẫn S.Thru), DS chương trình 12 tháng ≥ 0,7 tỷ (= mốc Gold C của một nửa năm) và có S.Out trong 90 ngày.</p>
+          <div class="cac-tile"><span class="k">Số ứng viên</span><span class="v" id="c-n" data-source="asm_scorecard" data-field="cand">—</span></div>
+          <details class="cac-method">
+            <summary>Cách chấm điểm</summary>
+            <ul>
+              <li><b>Quy mô (0–10):</b> S.Out 12 tháng (10/2025–9/2026): ≥3 tỷ = 4, ≥1 tỷ = 3, ≥300tr = 2, ≥50tr = 1 · Năm đỉnh 2024/2025: ≥5 tỷ = 3, ≥1,5 tỷ = 2, ≥300tr = 1 · Số model 12 tháng: ≥10 = 3, ≥5 = 2, ≥2 = 1.</li>
+              <li><b>Gắn kết (0–10):</b> S.Out gần nhất: &lt;30 ngày = 3, &lt;90 = 2, &lt;180 = 1 · Số tháng có S.Out (6 tháng gần nhất): ≥5 = 3, 3–4 = 2, 1–2 = 1 · Tăng trưởng YTD: ≥ +20% = 2, ≥ 0% = 1 · Đang trong list Key SD = 2.</li>
+              <li><b>"Mất 2026"</b> = có S.Out năm 2025, chưa có S.Out YTD/2026. <b>"Mới 2026"</b> = S.Out đầu tiên (từ 2024) rơi vào năm 2026.</li>
+            </ul>
+          </details>
+        </div>
+      </div>
+
+      <div class="cac-card" id="card-stores">
+        <h3 id="stores-title">Danh sách shop và hành động</h3>
+        <div class="cac-filter">
+          <input type="search" id="st-q" placeholder="Tìm shop, mã, tỉnh…" aria-label="Tìm shop">
+          <select id="st-status" aria-label="Lọc Status"><option value="">Active + Deactive</option><option value="Active">Chỉ Active</option><option value="Deactive">Chỉ Deactive</option></select>
+          <select id="st-flag" aria-label="Lọc cờ">
+            <option value="">Tất cả shop</option><option value="Mất 2026">Chỉ shop mất 2026</option><option value="Mới 2026">Chỉ shop mới 2026</option><option value="cand">Chỉ ứng viên Key SD</option>
+          </select>
+          <button class="cac-chip" id="tier-clear" hidden>Bỏ lọc tầng ×</button>
+        </div>
+        <div class="cac-scroll">
+          <table id="tb-st" data-source="store_tiering" data-row-key="code">
+            <thead><tr>
+              <th data-field="code"><button>Mã</button></th>
+              <th data-field="name"><button>Shop</button></th>
+              <th class="hide-sm" data-field="province"><button>Tỉnh</button></th>
+              <th class="hide-sm" data-field="asm"><button>ASM</button></th>
+              <th data-field="map_status"><button>Status</button></th>
+              <th data-field="tier"><button>Tầng</button></th>
+              <th class="n" data-field="fit"><button>Quy mô</button></th>
+              <th class="n" data-field="eng"><button>Gắn kết</button></th>
+              <th class="n" data-field="so_2024"><button>2024 (tr)</button></th>
+              <th class="n" data-field="so_2025"><button>2025 (tr)</button></th>
+              <th class="n" data-field="l12m"><button>12T (tr)</button></th>
+              <th class="n" data-field="ytd_2026"><button>YTD/26 (tr)</button></th>
+              <th class="n" data-field="gr_ytd"><button>GR %</button></th>
+              <th class="n hide-sm" data-field="days_since"><button>Ngày từ S.Out cuối</button></th>
+              <th data-field="new_flag"><button>Biến động</button></th>
+              <th class="hide-sm" data-field="key_grade"><button>Key SD</button></th>
+              <th data-field="keysd_candidate"><button>Ứng viên</button></th>
+              <th data-field="action"><button>Hành động</button></th>
+            </tr></thead><tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cac-tip" id="tip" hidden></div>
+</div>
+
+<script>
+window.CAC = (() => {
+  const TOTAL = 'Tổng South (Sub-D)';
+  const nf = (d) => new Intl.NumberFormat('en', {minimumFractionDigits: d, maximumFractionDigits: d});
+  const num = (v, d = 1) => v == null || isNaN(v) ? '—' : nf(d).format(v);
+  const sgn = (v, d = 1) => v == null || isNaN(v) ? '—' : (v > 0 ? '+' : v < 0 ? '−' : '') + nf(d).format(Math.abs(v));
+  const pct = (v, d = 1) => v == null || isNaN(v) ? '—' : nf(d).format(v * 100) + '%';
+  const spct = (v, d = 1) => v == null || isNaN(v) ? '—' : (v > 0 ? '+' : v < 0 ? '−' : '') + nf(d).format(Math.abs(v) * 100) + '%';
+  const enc = (s) => String(s).replace(/%/g, '%25').replace(/&/g, '%26').replace(/=/g, '%3D');
+  const st = {tab: 'one', tier: null, sort: {}, list: 'lost'};
+  const tip = document.getElementById('tip');
+  const root = document.getElementById('cac');
+  function showTip(ev, html) {
+    tip.replaceChildren(...html); tip.hidden = false;
+    const r = root.getBoundingClientRect();
+    let x = ev.clientX - r.left + 12, y = ev.clientY - r.top + 12;
+    const w = tip.offsetWidth; if (x + w > r.width) x = Math.max(0, ev.clientX - r.left - w - 12);
+    tip.style.left = x + 'px'; tip.style.top = y + 'px';
+  }
+  const hideTip = () => { tip.hidden = true; };
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  function sortable(table, key) {
+    table.querySelectorAll('th button').forEach((b) => b.addEventListener('click', () => {
+      const f = b.parentElement.dataset.field; const cur = st.sort[key];
+      st.sort[key] = {f, dir: cur && cur.f === f ? -cur.dir : (['asm','name','zone','code','province','tier','grade','status','flags','new_flag','action','key_grade','tier_now','next_tier'].includes(f) ? 1 : -1)};
+      table.querySelectorAll('th').forEach((t) => t.removeAttribute('aria-sort'));
+      b.parentElement.setAttribute('aria-sort', st.sort[key].dir > 0 ? 'ascending' : 'descending');
+      window.CAC.render();
+    }));
+  }
+  function applySort(rows, key, def) {
+    const s = st.sort[key] || def; if (!s) return rows;
+    return rows.slice().sort((a, b) => {
+      const x = a[s.f], y = b[s.f];
+      if (x == null && y == null) return 0; if (x == null) return 1; if (y == null) return -1;
+      return (typeof x === 'number' ? x - y : String(x).localeCompare(String(y), 'vi')) * s.dir;
+    });
+  }
+  const SCOPED = new Set(['asm_coverage','asm_scorecard','asm_monthly','keysd_h2','store_tiering','scope','asm_province','white_space','challenges']);
+  const scope = () => (['all','n','ws','pj','npj','wspj'].includes(dash.params().scope) ? dash.params().scope : 'channel');
+  // Cross Sales multi-select: set of {n, ws, pj} <-> scope key
+  const XS_KEY = {'n': 'n', 'ws': 'ws', 'pj': 'pj', 'n+ws': 'channel', 'n+pj': 'npj', 'ws+pj': 'wspj', 'n+ws+pj': 'all'};
+  const XS_SET = {n: ['n'], ws: ['ws'], pj: ['pj'], channel: ['n', 'ws'], npj: ['n', 'pj'], wspj: ['ws', 'pj'], all: ['n', 'ws', 'pj']};
+  const xsKey = (arr) => XS_KEY[['n', 'ws', 'pj'].filter((x) => arr.includes(x)).join('+')] || 'channel';
+  const SCOPE_LABEL = {channel: 'N + Y-WS', n: 'N', ws: 'Y-WS', pj: 'Y-PJ', npj: 'N + Y-PJ', wspj: 'Y-WS + Y-PJ', all: 'N + Y-WS + Y-PJ'};
+  let ASM_SUP = {};
+  const sel = () => { const p = dash.params(); const asm = p.asm || null; const sup = p.sup || null;
+    const key = asm || (sup ? 'Sup · ' + sup : TOTAL);
+    const set = asm ? new Set([asm]) : (sup ? new Set(Object.keys(ASM_SUP).filter((a) => ASM_SUP[a] === sup)) : null);
+    return {asm, sup, key, set, has: (a) => !set || set.has(a)}; };
+  const setAsmSup = (m) => { ASM_SUP = m; };
+  const sid = (id) => (!SCOPED.has(id) || scope() === 'channel' || (id === 'challenges' && ['ws', 'pj', 'wspj'].includes(scope())) ? id : id + '_' + scope());
+  const ds = (id) => dash.data(sid(id));
+  function applyScope() {
+    document.querySelectorAll('#cac [data-source]').forEach((e) => {
+      if (!e.dataset.base) e.dataset.base = e.dataset.source;
+      e.dataset.source = e.dataset.base.split(' ').map(sid).join(' ');
+    });
+  }
+  return {TOTAL, num, sgn, pct, spct, enc, st, showTip, hideTip, el, sortable, applySort, scope, ds, applyScope, sel, setAsmSup, SCOPE_LABEL, XS_SET, xsKey};
+})();
+</script>
+
+<script>
+(() => {
+  const C = window.CAC, {TOTAL, num, sgn, pct, spct, enc, st, el} = C;
+  const sel = document.getElementById('asm-sel');
+  const clr = document.getElementById('asm-clear');
+  const tabs = [...document.querySelectorAll('.cac-tab')];
+  const xsBtn = document.getElementById('xs-btn'), xsPop = document.getElementById('xs-pop'), xsBox = [...xsPop.querySelectorAll('input')], sup = document.getElementById('sup-sel');
+  sel.addEventListener('change', () => dash.setParams({asm: sel.value || null}));
+  sup.addEventListener('change', () => dash.setParams({sup: sup.value || null, asm: null}));
+  const xsOpen = (o) => { xsPop.hidden = !o; xsBtn.setAttribute('aria-expanded', String(o)); };
+  xsBtn.addEventListener('click', (e) => { e.stopPropagation(); xsOpen(xsPop.hidden); });
+  document.addEventListener('click', (e) => { if (!xsPop.hidden && !xsPop.contains(e.target)) xsOpen(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !xsPop.hidden) { xsOpen(false); xsBtn.focus(); } });
+  xsBox.forEach((b) => b.addEventListener('change', () => {
+    const on = xsBox.filter((x) => x.checked).map((x) => x.value);
+    if (!on.length) { b.checked = true; return; }   // phải chọn ít nhất 1 mục
+    dash.setParams({scope: C.xsKey(on)});
+  }));
+  clr.addEventListener('click', () => dash.setParams({asm: null, sup: null, scope: 'channel'}));
+  const showTab = (t) => {
+    st.tab = t;
+    tabs.forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
+    document.querySelectorAll('[data-page]').forEach((s) => { s.hidden = s.dataset.page !== t; });
+    dash.setLink(t); C.render();
+  };
+  C.showTab = showTab;
+  tabs.forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab)));
+  const step = (d) => {
+    const opts = [...sel.options].map((o) => o.value).filter(Boolean); if (!opts.length) return;
+    const cur = opts.indexOf(dash.params().asm || ''); const nx = opts[cur < 0 ? (d > 0 ? 0 : opts.length - 1) : (cur + d + opts.length) % opts.length];
+    dash.setParams({asm: nx});
+  };
+  document.getElementById('asm-prev').addEventListener('click', () => step(-1));
+  document.getElementById('asm-next').addEventListener('click', () => step(1));
+
+  const setMark = (id, field, asm, text, cls) => {
+    const e = document.getElementById(id); if (!e) return;
+    e.dataset.where = 'asm=' + enc(asm); e.textContent = text;
+    e.classList.remove('dash-skeleton');
+    if (cls !== undefined) { e.classList.remove('up', 'dn', 'wn'); if (cls) e.classList.add(cls); }
+  };
+  const tone = (v) => v == null ? '' : v > 0 ? 'up' : v < 0 ? 'dn' : '';
+  const span = (text, src, field, asm, cls) => { const s = el('span', cls, text); s.dataset.source = src; s.dataset.field = field; if (asm) s.dataset.where = 'asm=' + enc(asm); return s; };
+
+  function takeaway(rows, asm) {
+    const p = document.getElementById('take'); const tot = rows.find((r) => r.asm === TOTAL);
+    const S = (t, f, a, c) => span(t, 'asm_scorecard', f, a, c);
+    if (!asm) {
+      const by = rows.filter((r) => r.kind === 'asm').sort((a, b) => a.gap_ytd - b.gap_ytd);
+      const d1 = by[0], d2 = by[1], g1 = by[by.length - 1];
+      const L = (...k) => { const x = document.createElement('li'); x.append(...k); return x; };
+      const ul = document.createElement('ul'); ul.className = 'take-list';
+      ul.append(
+        L('S.Out Sub-D (' + C.SCOPE_LABEL[C.scope()] + ') YTD/2026 đạt ', S(num(tot.ytd_2026), 'ytd_2026', TOTAL), ' tỷ, ', S(spct(tot.gr_ytd), 'gr_ytd', TOTAL, tone(tot.gr_ytd)), ' vs cùng kỳ.'),
+        L(S(d1.asm, 'asm', d1.asm), ' (', S(sgn(d1.gap_ytd), 'gap_ytd', d1.asm, 'dn'), ' tỷ) và ', S(d2.asm, 'asm', d2.asm), ' (', S(sgn(d2.gap_ytd), 'gap_ytd', d2.asm, 'dn'),
+          ' tỷ) kéo giảm; ', S(g1.asm, 'asm', g1.asm), ' bù ', S(sgn(g1.gap_ytd), 'gap_ytd', g1.asm, 'up'), ' tỷ.'),
+        L('Gốc rễ là base shop co lại: mở ', S(num(tot.new_2026, 0), 'new_2026', TOTAL), ', mất ', S(num(tot.lost_2026, 0), 'lost_2026', TOTAL), ' shop.'),
+        L('Chỉ ', S(num(tot.keysd_ok, 0), 'keysd_ok', TOTAL), '/', S(num(tot.keysd, 0), 'keysd', TOTAL), ' Key SD đạt hoặc dự kiến đạt mốc H2; ',
+          S(num(tot.keysd_zero, 0), 'keysd_zero', TOTAL), ' Key SD chưa có S.Out từ 01/07.'));
+      p.replaceChildren(ul);
+    } else {
+      const r = rows.find((x) => x.asm === asm); if (!r) return;
+      const isSup = asm.startsWith('Sup · ');
+      const li = (...k) => { const x = document.createElement('li'); x.append(...k); return x; };
+      const name = document.createElement('div'); name.className = 'take-name';
+      name.append(S(asm, 'asm', asm), ...(isSup ? [' · ', S(r.zone, 'zone', asm)] : [' · hạng ', S(num(r.rank, 0), 'rank', asm), '/14']));
+      const ul = document.createElement('ul'); ul.className = 'take-list';
+      ul.append(
+        li('SALES: S.Out YTD/2026 ', S(num(r.ytd_2026, 2), 'ytd_2026', asm), ' tỷ (', S(spct(r.gr_ytd), 'gr_ytd', asm, tone(r.gr_ytd)), ', ', S(sgn(r.gap_ytd, 2), 'gap_ytd', asm, tone(r.gap_ytd)), ' tỷ)'),
+        li('COVERAGE: thêm ', S(num(r.new_2026, 0), 'new_2026', asm), ', mất ', S(num(r.lost_2026, 0), 'lost_2026', asm), ' shop',
+          ...(r.white_space != null ? ['; còn ', S(num(r.white_space, 0), 'white_space', asm), ' shop Active chưa từng mua CAC'] : [])),
+        li('Key SD đạt/dự kiến đạt: ', S(num(r.keysd_ok, 0), 'keysd_ok', asm), '/', S(num(r.keysd, 0), 'keysd', asm)));
+      if (r.flags) { const rk = li('Rủi ro: ', S(r.flags, 'flags', asm)); rk.className = 'take-risk'; ul.append(rk); }
+      p.replaceChildren(name, ul);
+    }
+  }
+
+  function tiles(r, asm) {
+    setMark('t-ytd', 'ytd_2026', asm, num(r.ytd_2026, asm === TOTAL ? 1 : 2));
+    setMark('t-gr', 'gr_ytd', asm, spct(r.gr_ytd), tone(r.gr_ytd));
+    setMark('t-gap', 'gap_ytd', asm, sgn(r.gap_ytd, 2), tone(r.gap_ytd));
+    setMark('t-ytd25', 'ytd_2025', asm, num(r.ytd_2025, 2));
+    setMark('t-pen', 'pen_2026', asm, pct(r.pen_2026));
+    setMark('t-buy', 'buying_2026', asm, num(r.buying_2026, 0));
+    setMark('t-base', 'active_base', asm, num(r.active_base, 0));
+    setMark('t-new', 'new_2026', asm, num(r.new_2026, 0));
+    setMark('t-lost', 'lost_2026', asm, num(r.lost_2026, 0));
+    setMark('t-net', 'net_dev', asm, sgn(r.net_dev, 0), tone(r.net_dev));
+    setMark('t-white', 'white_space', asm, num(r.white_space, 0));
+    setMark('k-ok', 'keysd_ok', asm, num(r.keysd_ok, 0));
+    setMark('k-n', 'keysd', asm, num(r.keysd, 0));
+    setMark('k-rate', 'keysd_ok_rate', asm, pct(r.keysd_ok_rate, 0));
+    setMark('k-zero', 'keysd_zero', asm, num(r.keysd_zero, 0));
+    setMark('k-h2', 'keysd_h2', asm, num(r.keysd_h2, 2));
+    setMark('k-inc', 'keysd_inc', asm, num(r.keysd_inc, 0));
+    setMark('k-pinc', 'keysd_proj_inc', asm, num(r.keysd_proj_inc, 0));
+    setMark('k1-hit', 'ks1_hit', asm, num(r.ks1_hit, 0)); setMark('k1-n', 'keysd', asm, num(r.keysd, 0)); setMark('k1-zero', 'ks1_zero', asm, num(r.ks1_zero, 0));
+    setMark('k1-ds', 'keysd_h1', asm, num(r.keysd_h1, 2)); setMark('k1-inc', 'keysd_inc_h1', asm, num(r.keysd_inc_h1, 0));
+    ['A','B','C','D'].forEach((t) => { setMark('q-' + t, 'tier' + t, asm, num(r['tier' + t], 0)); setMark('q-l' + t, 'l12_' + t, asm, num(r['l12_' + t], 1)); });
+    setMark('c-n', 'cand', asm, num(r.cand, 0));
+  }
+
+  const STAT = [['ks_max','1. Max mốc','var(--color-ok)'],['ks_hit','2. Đã đạt mốc','color-mix(in srgb,var(--color-ok) 65%,transparent)'],['ks_proj','3. Dự kiến đạt','var(--color-warn)'],['ks_push','4. Cần đẩy','color-mix(in srgb,var(--color-warn) 60%,transparent)'],['ks_far','5. Xa mốc','var(--color-bad)']];
+  function stack(r, asm) {
+    const box = document.getElementById('ks-stack'), lg = document.getElementById('ks-legend');
+    const n = STAT.reduce((s, [f]) => s + (r[f] || 0), 0);
+    box.replaceChildren(...STAT.filter(([f]) => r[f] > 0).map(([f, lab, col]) => {
+      const d = el('div', '', num(r[f], 0)); d.style.flex = r[f] + ' 1 0'; d.style.background = col; d.dataset.source = 'asm_scorecard'; d.dataset.field = f; d.dataset.where = 'asm=' + enc(asm); d.title = lab; return d; }));
+    lg.replaceChildren(...STAT.map(([f, lab, col]) => { const s = el('span'); const i = el('i'); i.style.background = col; s.append(i, lab + ' (' + num(r[f], 0) + ')'); return s; }));
+    document.getElementById('status-title').textContent = 'Key SD theo trạng thái mốc thưởng · ' + (asm === TOTAL ? 'toàn South' : asm) + ' (' + n + ' shop)';
+  }
+
+  function gapChart(rows, asm) {
+    const box = document.getElementById('ch-gap');
+    const S0 = C.sel(); const data = rows.filter((r) => r.kind === 'asm' && S0.has(r.asm)).sort((a, b) => a.gap_ytd - b.gap_ytd);
+    const W = Math.max(300, box.clientWidth), rowH = 24, top = 6, H = top + data.length * rowH + 22;
+    const svg = d3.create('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Chênh lệch S.Out theo ASM');
+    box.replaceChildren(svg.node());
+    const tmp = svg.append('g').attr('font-size', 12);
+    let lw = 0; data.forEach((d) => { const t = tmp.append('text').text(d.asm); lw = Math.max(lw, t.node().getComputedTextLength() || d.asm.length * 6.6); }); tmp.remove();
+    const L = Math.min(lw + 10, W * 0.42), R = 52;
+    const ext = d3.max(data, (d) => Math.abs(d.gap_ytd)) || 1;
+    const x = d3.scaleLinear([-ext, ext], [L + 46, W - R]).nice();
+    svg.append('line').attr('x1', x(0)).attr('x2', x(0)).attr('y1', top - 4).attr('y2', H - 20).attr('stroke', 'var(--cds-chart-axis)');
+    const g = svg.selectAll('g.r').data(data).join('g').attr('class', 'r').attr('transform', (d, i) => `translate(0,${top + i * rowH})`).style('cursor', 'pointer')
+      .on('click', (e, d) => dash.setParams({asm: d.asm === asm ? null : d.asm}))
+      .on('mousemove', (e, d) => C.showTip(e, [el('div', 'h', d.asm + ' · ' + d.zone), el('div', '', 'YTD/26: ' + num(d.ytd_2026, 2) + ' tỷ · YTD/25: ' + num(d.ytd_2025, 2) + ' tỷ'), el('div', '', 'Δ ' + sgn(d.gap_ytd, 2) + ' tỷ (' + spct(d.gr_ytd) + ')')]))
+      .on('mouseleave', C.hideTip);
+    g.append('text').attr('x', L - 8).attr('y', rowH / 2).attr('dy', '0.35em').attr('text-anchor', 'end').attr('font-size', 12)
+      .attr('fill', (d) => d.asm === asm ? 'var(--color-fg)' : 'var(--color-fg-muted)').attr('font-weight', (d) => d.asm === asm ? 700 : 400).text((d) => d.asm);
+    g.append('rect').attr('x', (d) => Math.min(x(0), x(d.gap_ytd))).attr('y', 4).attr('height', rowH - 8).attr('rx', 3)
+      .attr('width', (d) => Math.max(1.5, Math.abs(x(d.gap_ytd) - x(0))))
+      .attr('fill', (d) => d.gap_ytd < 0 ? '#FD312E' : 'var(--cds-chart-muted)').attr('opacity', (d) => !asm || d.asm === asm ? 1 : 0.35);
+    g.append('text').attr('y', rowH / 2).attr('dy', '0.35em').attr('font-size', 11).attr('fill', 'var(--color-fg-muted)')
+      .attr('x', (d) => d.gap_ytd < 0 ? x(d.gap_ytd) - 4 : x(d.gap_ytd) + 4).attr('text-anchor', (d) => d.gap_ytd < 0 ? 'end' : 'start').text((d) => sgn(d.gap_ytd, 1));
+    svg.append('text').attr('x', x(0)).attr('y', H - 4).attr('text-anchor', 'middle').attr('font-size', 11).attr('fill', 'var(--color-fg-muted)').text('0 tỷ');
+    box.replaceChildren(svg.node()); box.style.minHeight = H + 'px';
+  }
+
+  C.monthChart = monthChart;
+  // Tiến độ theo năm: thanh ngang cả năm 2024 / 2025 / 2026 (YTD + dự kiến)
+  const END = new Date(2026, 9, 24); const MEL = END.getMonth() + END.getDate() / new Date(2026, 10, 0).getDate(); const MREM = 12 - MEL;
+  function monthChart(asm) {
+    const box = document.getElementById('ch-month'); const ds = C.ds('asm_scorecard');
+    if (ds.status !== 'ok') { box.replaceChildren(); return; }
+    const r = ds.data.find((x) => x.asm === asm), t = ds.data.find((x) => x.asm === TOTAL); if (!r || !t) return;
+    const k = ((t.so_2024 / t.ytd_2024) + (t.so_2025 / t.ytd_2025)) / 2;           // hệ số mùa vụ South
+    const proj = r.ytd_2026 * k, rest25 = r.so_2025 - r.ytd_2025, rr = r.ytd_2026 / MEL;
+    document.getElementById('month-title').textContent = 'Tiến độ doanh số theo năm · ' + (asm === TOTAL ? 'toàn South' : asm);
+    const rows = [
+      {y: '2024', ytd: r.ytd_2024, full: r.so_2024, col: 'var(--cds-chart-muted)'},
+      {y: '2025', ytd: r.ytd_2025, full: r.so_2025, col: 'var(--color-fg-muted)'},
+      {y: '2026', ytd: r.ytd_2026, full: proj, col: '#FD312E', proj: true}];
+    const refs = [[r.so_2025, 'Bằng 2025'], [r.so_2025 * 1.1, '+10%'], [r.so_2025 * 1.2, '+20%']].filter((d) => d[0] > 0);
+    const W = Math.max(320, box.clientWidth), rowH = 46, m = {t: 30, r: 120, b: 26, l: 46}, H = m.t + rows.length * rowH + m.b;
+    const xmax = d3.max([r.so_2024, r.so_2025 * 1.22, proj]) || 1;
+    const x = d3.scaleLinear([0, xmax], [m.l, W - m.r]).nice();
+    const y = d3.scaleBand(rows.map((d) => d.y), [m.t, H - m.b]).padding(0.28);
+    const svg = d3.create('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Doanh số cả năm 2024, 2025 và dự kiến 2026');
+    const xa = svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).ticks(5).tickSize(-(H - m.t - m.b)).tickFormat((v) => num(v, xmax < 5 ? 1 : 0)));
+    xa.attr('font-size', null).attr('font-family', null); xa.select('.domain').remove();
+    xa.selectAll('line').attr('stroke', 'var(--cds-chart-grid)').attr('stroke-opacity', 0.5); xa.selectAll('text').attr('fill', 'var(--color-fg-muted)').attr('font-size', 11);
+    svg.append('g').selectAll('text').data(rows).join('text').attr('x', m.l - 8).attr('y', (d) => y(d.y) + y.bandwidth() / 2).attr('dy', '0.35em').attr('text-anchor', 'end')
+      .attr('font-size', 13).attr('font-weight', 650).attr('fill', 'var(--color-fg)').text((d) => d.y);
+    const g = svg.append('g').selectAll('g').data(rows).join('g').attr('transform', (d) => `translate(0,${y(d.y)})`);
+    const bw = y.bandwidth();
+    g.append('rect').attr('x', x(0)).attr('height', bw).attr('rx', 3).attr('width', (d) => Math.max(0, x(d.full) - x(0))).attr('fill', (d) => d.col).attr('fill-opacity', 0.28)
+      .attr('stroke', (d) => d.proj ? d.col : 'none').attr('stroke-dasharray', '4 3').attr('stroke-width', 1);
+    g.append('rect').attr('x', x(0)).attr('height', bw).attr('rx', 3).attr('width', (d) => Math.max(0, x(d.ytd) - x(0))).attr('fill', (d) => d.col);
+    g.filter((d) => x(d.ytd) - x(0) > 70).append('text').attr('x', x(0) + 8).attr('y', bw / 2).attr('dy', '0.35em').attr('font-size', 11).attr('font-weight', 600)
+      .attr('fill', (d) => d.proj ? '#fff' : 'var(--color-bg)').text((d) => 'YTD ' + num(d.ytd, d.ytd < 10 ? 2 : 1));
+    g.append('text').attr('x', (d) => x(Math.max(d.full, d.ytd)) + 6).attr('y', bw / 2).attr('dy', '0.35em').attr('font-size', 12).attr('font-weight', 650).attr('fill', 'var(--color-fg)')
+      .text((d) => (d.proj ? '≈ ' : '') + num(d.full, d.full < 10 ? 2 : 1) + ' tỷ' + (d.proj ? ' dự kiến' : ''));
+    const rg = svg.append('g').selectAll('g').data(refs).join('g').attr('transform', (d) => `translate(${x(d[0])},0)`);
+    rg.append('line').attr('y1', m.t - 6).attr('y2', H - m.b).attr('stroke', (d, i) => i ? 'var(--color-fg-muted)' : 'var(--color-fg)').attr('stroke-width', (d, i) => i ? 1 : 1.5).attr('stroke-dasharray', (d, i) => i ? '3 3' : null);
+    rg.append('text').attr('y', m.t - 10).attr('text-anchor', 'middle').attr('font-size', 11).attr('fill', 'var(--color-fg-muted)').text((d) => d[1]);
+    g.append('rect').attr('x', m.l).attr('width', W - m.l - m.r).attr('height', bw).attr('fill', 'transparent')
+      .on('mousemove', (e, d) => C.showTip(e, [el('div', 'h', d.y + (d.proj ? ' (dự kiến)' : '')), el('div', '', 'YTD 01/01–24/10: ' + num(d.ytd, 2) + ' tỷ'),
+        el('div', '', (d.proj ? 'Dự kiến 25/10–31/12: ' : '25/10–31/12: ') + num(d.full - d.ytd, 2) + ' tỷ'), el('div', '', (d.proj ? 'Dự kiến cả năm: ' : 'Cả năm: ') + num(d.full, 2) + ' tỷ')]))
+      .on('mouseleave', C.hideTip);
+    box.replaceChildren(svg.node());
+    // bảng nỗ lực cần thêm
+    const tb = document.querySelector('#tb-need tbody');
+    const sc = [['Bằng 2024', r.so_2024], ['Bằng 2025', r.so_2025], ['Tăng 10% vs 2025', r.so_2025 * 1.1], ['Tăng 20% vs 2025', r.so_2025 * 1.2]].filter((d) => d[1] > 0);
+    const line = (lab, goal, cls) => { const need = goal - r.ytd_2026, pm = need / MREM; const tr = el('tr', cls || '');
+      if (need <= 0) { tr.append(el('td', 'nowrap', lab), el('td', 'n', num(goal, 2)), el('td', 'n up', 'Đã vượt ' + num(-need, 2)), el('td', 'n', '—'), el('td', 'n', '—'), el('td', 'n', '—')); return tr; }
+      const xr = rr > 0 ? pm / rr : null, xl = rest25 > 0 ? need / rest25 : null;
+      tr.append(el('td', 'nowrap', lab), el('td', 'n', num(goal, 2)), el('td', 'n', num(need, 2)), el('td', 'n', num(pm, 2)),
+        el('td', 'n ' + (xr == null ? '' : xr > 1.5 ? 'dn' : xr > 1.1 ? 'wn' : 'up'), xr == null ? '—' : num(xr, 1) + '×'), el('td', 'n ' + (xl == null ? '' : xl > 1.5 ? 'dn' : xl > 1.1 ? 'wn' : 'up'), xl == null ? '—' : num(xl, 1) + '×'));
+      return tr; };
+    const pr = el('tr', 'tot'); pr.append(el('td', 'nowrap', 'Nếu giữ nhịp như mùa vụ năm trước'), el('td', 'n', num(proj, 2)), el('td', 'n', num(proj - r.ytd_2026, 2)), el('td', 'n', num((proj - r.ytd_2026) / MREM, 2)),
+      el('td', 'n ' + tone(proj / r.so_2025 - 1), spct(r.so_2025 ? proj / r.so_2025 - 1 : null, 0) + ' vs 2025'), el('td', 'n', ''));
+    tb.replaceChildren(...sc.map(([l, v]) => line(l, v)), pr);
+    document.getElementById('need-title').textContent = 'Cần nỗ lực thêm bao nhiêu từ 25/10 đến 31/12? Nhịp YTD/2026: ' + num(rr, 2) + ' tỷ/tháng · cùng giai đoạn này năm 2025 bán ' + num(rest25, 2) + ' tỷ';
+  }
+
+
+  function board(rows, asm) {
+    const tb = document.querySelector('#tb-board tbody');
+    const S0 = C.sel(); const data = C.applySort(rows.filter((r) => r.kind === 'asm' && (!S0.sup || r.lead === S0.sup)), 'board', {f: 'rank', dir: 1});
+    tb.replaceChildren(...data.map((r) => {
+      const tr = el('tr', 'click' + (r.asm === asm ? ' sel' : '')); tr.dataset.key = r.asm;
+      const rk = el('td', 'n'); rk.append(el('span', 'rank' + (r.rank <= 3 ? ' top' : ''), num(r.rank, 0)));
+      tr.append(rk, el('td', 'nowrap', r.asm), el('td', 'hide-sm nowrap', r.zone), el('td', 'n', num(r.ytd_2026, 2)), el('td', 'n ' + tone(r.gr_ytd), spct(r.gr_ytd)),
+        el('td', 'n ' + tone(r.gap_ytd), sgn(r.gap_ytd, 2)), el('td', 'n', pct(r.pen_2026)), el('td', 'n', num(r.new_2026, 0)), el('td', 'n', num(r.lost_2026, 0)),
+        el('td', 'n', num(r.keysd_ok, 0)), el('td', 'n', num(r.keysd, 0)), el('td', 'n hide-sm', num(r.white_space, 0)), el('td', 'wrap flag', r.flags || ''));
+      return tr;
+    }));
+  }
+  document.querySelector('#tb-board')?.addEventListener('click', (e) => { const tr = e.target.closest('tr[data-key]'); if (tr) { dash.setParams({asm: tr.dataset.key}); showTab('one'); window.scrollTo(0, 0); } });
+  if (document.getElementById('tb-board')) C.sortable(document.getElementById('tb-board'), 'board');
+
+  function scope() {
+    const ds = C.ds('scope'); const tb = document.querySelector('#tb-scope tbody');
+    if (ds.status !== 'ok') { tb.replaceChildren(); return; }
+    tb.replaceChildren(...ds.data.map((r) => { const tr = el('tr'); tr.append(el('td', '', r.scope), ...['so_2024','so_2025','ytd_2025','ytd_2026'].map((f) => el('td', 'n', num(r[f], 1)))); return tr; }));
+  }
+
+  C.render = () => {
+    const ds = C.ds('asm_scorecard');
+    const S0 = C.sel(); const asm = S0.asm;
+    clr.hidden = !(S0.asm || S0.sup || C.scope() !== 'channel');
+    if (ds.status !== 'ok') { if (ds.status === 'error') document.getElementById('take').textContent = 'Không tải được bảng điểm ASM.'; return; }
+    const rows = ds.data;
+    const asmRows = rows.filter((r) => r.kind === 'asm');
+    C.setAsmSup(Object.fromEntries(asmRows.map((r) => [r.asm, r.lead])));
+    const S1 = C.sel();
+    const sups = [...new Set(asmRows.map((r) => r.lead))].sort((a, b) => a.localeCompare(b, 'vi'));
+    if (sup.options.length !== sups.length + 1) sup.replaceChildren(new Option('Tất cả Salesman', ''), ...sups.map((a) => new Option(a, a)));
+    sup.value = S1.sup || '';
+    const opts = asmRows.filter((r) => !S1.sup || r.lead === S1.sup).map((r) => r.asm).sort((a, b) => a.localeCompare(b, 'vi'));
+    const optKey = (S1.sup || '') + '|' + opts.join(',');
+    if (sel.dataset.k !== optKey) { sel.replaceChildren(new Option(S1.sup ? 'Tất cả ASM của ' + S1.sup : 'Tất cả ASM (14)', ''), ...opts.map((a) => new Option(a, a))); sel.dataset.k = optKey; }
+    sel.value = asm || '';
+    { const on = C.XS_SET[C.scope()]; xsBox.forEach((x) => { x.checked = on.includes(x.value); }); document.getElementById('xs-txt').textContent = C.SCOPE_LABEL[C.scope()]; }
+    const key = S1.key; const r = rows.find((x) => x.asm === key) || rows.find((x) => x.asm === TOTAL);
+    takeaway(rows, key === TOTAL ? null : key); tiles(r, key); stack(r, key);
+    if (st.tab === 'one' && C.renderOne) C.renderOne(rows, asm);
+    if (window.CAC.renderKs && st.tab === 'keysd') window.CAC.renderKs(asm);
+    if (window.CAC.renderSt && st.tab === 'tier') window.CAC.renderSt(asm);
+    document.getElementById('eyebrow').replaceChildren(el('span', 'eb-date', 'số liệu đến 24/10/2026'), ' · LG ES Channel South · CAC Sell-out (MRP) · Sub-D · Cross Sales');
+    C.applyScope();
+  };
+  dash.onData(() => C.render());
+  const named = location.hash.slice(1);
+  if (['one','keysd','tier'].includes(named)) showTab(named);
+})();
+</script>
+
+<script>
+(() => {
+  const C = window.CAC, {num, sgn, pct, spct, st, el} = C;
+  const q = document.getElementById('ks-q');
+  q.addEventListener('input', () => C.render());
+  C.sortable(document.getElementById('tb-ks'), 'ks');
+  const pcls = (s) => 'pill p' + String(s).charAt(0);
+  C.renderKs = (asm) => {
+    const ds = C.ds('keysd_h2'); const tb = document.querySelector('#tb-ks tbody');
+    if (ds.status !== 'ok') { tb.replaceChildren(); return; }
+    const t = q.value.trim().toLowerCase();
+    let rows = ds.data.filter((r) => C.sel().has(r.asm) && (!t || [r.name, r.code, r.province, r.asm].join(' ').toLowerCase().includes(t)));
+    rows = C.applySort(rows, 'ks', null) ;
+    tb.replaceChildren(...rows.map((r) => {
+      const tr = el('tr'); tr.dataset.key = r.code;
+      const name = el('td', 'nowrap', r.name); name.title = r.code + ' · ' + (r.province || '');
+      const h2 = el('td', 'n prog', num(r.h2_td, 0)); h2.style.setProperty('--w', (r.next_th ? Math.min(100, r.h2_td / r.next_th * 100) : 100) + '%');
+      const stc = el('td'); stc.append(el('span', pcls(r.status), r.status));
+      tr.append(name, el('td', '', r.grade), el('td', 'hide-sm nowrap', r.asm), el('td', 'n', num(r.h1_2026, 0)), el('td', r.h1_tier === '—' ? '' : 'up', r.h1_tier), el('td', 'n hide-sm', num(r.h1_inc, 1)), el('td', 'n hide-sm', num(r.m7, 0)), el('td', 'n hide-sm', num(r.m8, 0)), el('td', 'n hide-sm', num(r.m9, 0)), el('td', 'n hide-sm', num(r.m10, 0)), h2,
+        el('td', 'n' + (r.h2_vs_h1 == null ? '' : r.h2_vs_h1 < 0 ? ' dn' : ' up'), spct(r.h2_vs_h1, 0)), el('td', '', r.tier_now), el('td', '', r.next_tier), el('td', 'n', num(r.gap_next, 0)), el('td', 'n', num(r.need_pm, 0)),
+        el('td', 'n' + (r.push_x == null ? '' : r.push_x > 3 ? ' dn' : r.push_x > 1.5 ? ' wn' : ' up'), r.push_x == null ? '—' : num(r.push_x, 1)),
+        el('td', 'n hide-sm', num(r.proj_dec, 0)), el('td', 'n hide-sm' + (r.days_since > 30 ? ' dn' : ''), r.days_since == null ? '—' : num(r.days_since, 0)), stc, el('td', 'wrap flag', r.flags || ''));
+      return tr;
+    }));
+  };
+})();
+</script>
+
+<script>
+(() => {
+  const C = window.CAC, {num, spct, st, el} = C;
+  const q = document.getElementById('st-q'), fl = document.getElementById('st-flag'), ss = document.getElementById('st-status'), tclr = document.getElementById('tier-clear');
+  ss.addEventListener('change', () => C.render());
+  q.addEventListener('input', () => C.render()); fl.addEventListener('change', () => C.render());
+  document.querySelectorAll('.cac-q').forEach((b) => b.addEventListener('click', () => { st.tier = st.tier === b.dataset.tier ? null : b.dataset.tier; C.render(); }));
+  tclr.addEventListener('click', () => { st.tier = null; C.render(); });
+  C.sortable(document.getElementById('tb-st'), 'st');
+  const tcls = (t) => 'pill ' + ({A: 'p1', B: 'p5', C: 'p3', D: ''}[String(t).charAt(0)] || '');
+  C.renderSt = (asm) => {
+    const sc = C.ds('asm_scorecard'); const key = C.sel().key; const tbs = document.querySelector('#tb-stt tbody');
+    if (sc.status === 'ok') {
+      const r = sc.data.find((x) => x.asm === key);
+      document.getElementById('stt-title').textContent = 'All Sub-D: Active và Deactive · ' + (key === C.TOTAL ? 'toàn South' : key);
+      const W = 'asm=' + C.enc(key);
+      const cell = (f, d) => { const e = el('td', 'n', num(r[f], d)); e.dataset.source = 'asm_scorecard'; e.dataset.field = f; e.dataset.where = W; return e; };
+      tbs.replaceChildren(...(r ? [['act', 'Active'], ['deact', 'Deactive']].map(([k, lab]) => { const tr = el('tr'); const c0 = el('td'); c0.append(el('span', 'pill ' + (k === 'act' ? 'p1' : 'p5'), lab));
+        tr.append(c0, cell('n_' + k, 0), cell('n26_' + k, 0), cell('so24_' + k, 2), cell('so25_' + k, 2), cell('y25_' + k, 2), cell('y26_' + k, 2)); return tr; }) : []));
+    }
+    document.querySelectorAll('.cac-q').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.tier === st.tier)));
+    tclr.hidden = !st.tier;
+    const ds = C.ds('store_tiering'); const tb = document.querySelector('#tb-st tbody');
+    if (ds.status !== 'ok') { tb.replaceChildren(); return; }
+    const t = q.value.trim().toLowerCase(), f = fl.value;
+    let rows = ds.data.filter((r) => C.sel().has(r.asm) && (!st.tier || r.tier === st.tier)
+      && (!ss.value || r.map_status === ss.value) && (!f || (f === 'cand' ? r.keysd_candidate : r.new_flag === f))
+      && (!t || [r.name, r.code, r.province, r.asm].join(' ').toLowerCase().includes(t)));
+    rows = C.applySort(rows, 'st', {f: 'l12m', dir: -1});
+    document.getElementById('stores-title').textContent = 'Danh sách shop và hành động · ' + rows.length + ' shop' + (st.tier ? ' · ' + st.tier : '') + (C.sel().key !== C.TOTAL ? ' · ' + C.sel().key : '') + (ss.value ? ' · ' + ss.value : '');
+    tb.replaceChildren(...rows.map((r) => {
+      const tr = el('tr'); tr.dataset.key = r.code;
+      const tc = el('td'); tc.append(el('span', tcls(r.tier), r.tier));
+      const nm = el('td', 'nowrap', r.name); nm.title = r.map_status === 'Deactive' ? 'Mapping: Deactive' : '';
+      tr.append(el('td', 'nowrap', r.code), nm, el('td', 'hide-sm nowrap', r.province), el('td', 'hide-sm nowrap', r.asm), el('td', r.map_status === 'Deactive' ? 'dn nowrap' : 'nowrap', r.map_status || '—'), tc, el('td', 'n', num(r.fit, 0)), el('td', 'n', num(r.eng, 0)),
+        el('td', 'n', num(r.so_2024, 0)), el('td', 'n', num(r.so_2025, 0)), el('td', 'n', num(r.l12m, 0)), el('td', 'n', num(r.ytd_2026, 0)), el('td', 'n' + (r.gr_ytd == null ? '' : r.gr_ytd < 0 ? ' dn' : ' up'), spct(r.gr_ytd, 0)),
+        el('td', 'n hide-sm' + (r.days_since > 90 ? ' dn' : ''), num(r.days_since, 0)), el('td', r.new_flag === 'Mất 2026' ? 'dn nowrap' : r.new_flag ? 'up nowrap' : '', r.new_flag),
+        el('td', 'hide-sm', r.key_grade), el('td', 'nowrap up', r.keysd_candidate), el('td', 'wrap', r.action));
+      return tr;
+    }));
+  };
+})();
+</script>
+
+<script>
+(() => {
+  const C = window.CAC, {TOTAL, num, sgn, pct, spct, enc, st, el} = C;
+  const S = (text, src, field, where, cls) => { const s = el('span', cls, text); s.dataset.source = src; s.dataset.field = field; if (where) s.dataset.where = where; return s; };
+  const W = (a) => 'asm=' + enc(a);
+  const tone = (v) => v == null ? '' : v > 0 ? 'up' : v < 0 ? 'dn' : '';
+  const rkc = (r) => r == null ? '' : r <= 4 ? 'up' : r >= 11 ? 'dn' : 'wn';
+
+  function picker(rows) {
+    const box = document.getElementById('pick');
+    const S0 = C.sel(); const data = rows.filter((r) => r.kind === 'asm' && (!S0.sup || r.lead === S0.sup)).sort((a, b) => a.rank - b.rank);
+    box.replaceChildren(...data.map((r) => {
+      const b = el('button', 'cac-pk'); b.type = 'button';
+      b.addEventListener('click', () => dash.setParams({asm: r.asm}));
+      const rk = S(num(r.rank, 0), 'asm_scorecard', 'rank', W(r.asm), 'rank' + (r.rank <= 3 ? ' top' : ''));
+      const t = el('span', 't');
+      const z = el('span', 'mt', r.zone);
+      const mt = el('span', 'mt'); mt.append('YTD ', S(spct(r.gr_ytd, 0), 'asm_scorecard', 'gr_ytd', W(r.asm), tone(r.gr_ytd)));
+      t.append(S(r.asm, 'asm_scorecard', 'asm', W(r.asm), 'nm'), z, mt);
+      b.append(rk, t); return b;
+    }));
+  }
+
+  function profile(r, s) {
+    const box = document.getElementById('prof'); const w = W(r.asm);
+    const who = el('div', 'who');
+    const mt = el('span', 'mt'); mt.append(S(r.zone, 'asm_scorecard', 'zone', w), ' · ', S(r.area, 'asm_scorecard', 'area', w), ' · Sup: ', S(r.lead, 'asm_scorecard', 'lead', w));
+    const pv = el('span', 'mt'); pv.append('Tỉnh phụ trách: ', S(r.provinces, 'asm_scorecard', 'provinces', w));
+    const fl = el('div', 'flags');
+    (r.flags ? r.flags.split('; ') : []).forEach((f) => fl.append(el('span', 'pill p5', f)));
+    if (!r.flags) fl.append(el('span', 'pill p1', 'Không có cờ đỏ'));
+    who.append(S(r.asm, 'asm_scorecard', 'asm', w, 'nm'), mt, pv, fl);
+    const big = el('div', 'big'); const lab = el('span', 'mt'); lab.append('Hạng thi đua', el('br'), '/14 ASM');
+    big.append(S(num(r.rank, 0), 'asm_scorecard', 'rank', w, 'rank' + (r.rank <= 3 ? ' top' : '')), lab);
+    box.replaceChildren(who, big);
+  }
+
+  function tile(k, main, subs, rk, hero) {
+    const d = el('div', 'cac-tile' + (hero ? ' hero' : ''));
+    d.append(el('span', 'k', k), main);
+    const s = el('span', 's'); s.append(...subs); d.append(s);
+    if (rk) d.append(rk);
+    return d;
+  }
+  function tiles(r, s) {
+    const w = W(r.asm), sw = W(TOTAL), A = 'asm_scorecard';
+    const RK = (f) => { const v = r['rk_' + f]; const x = el('span', 'rk ' + rkc(v)); x.append('Hạng ', S(num(v, 0), A, 'rk_' + f, w), '/14'); return x; };
+    const v = (t, f, cls) => S(t, A, f, w, 'v ' + (cls || ''));
+    const need = r.need_pm_py;
+    document.getElementById('one-tiles').replaceChildren(
+      tile('S.Out YTD/2026 (tỷ)', v(num(r.ytd_2026, 2), 'ytd_2026'), ['GR ', S(spct(r.gr_ytd), A, 'gr_ytd', w, tone(r.gr_ytd)), ' · Δ ', S(sgn(r.gap_ytd, 2), A, 'gap_ytd', w, tone(r.gap_ytd)), ' tỷ'], RK('ytd_2026'), true),
+      tile('Đà 2H (01/07–24/10) vs cùng kỳ', v(spct(r.gr_q3, 0), 'gr_q3', tone(r.gr_q3)), [S(num(r.q3_2026, 2), A, 'q3_2026', w), ' vs ', S(num(r.q3_2025, 2), A, 'q3_2025', w), ' tỷ'], RK('gr_q3')),
+      tile(need > 0 ? 'Cần/tháng đến 31/12 để bằng cả năm 2025' : 'Đã vượt cả năm 2025 (tỷ)', v(need > 0 ? num(need, 2) : sgn(need, 2), 'need_pm_py', need > 0 ? (r.push_x_py > 1.5 ? 'dn' : 'wn') : 'up'),
+        need > 0 ? ['tỷ/tháng · gấp ', S(num(r.push_x_py, 1), A, 'push_x_py', w), '× nhịp YTD (', S(num(r.rr_9m, 2), A, 'rr_9m', w), ' tỷ/tháng)'] : ['Năm 2025: ', S(num(r.so_2025, 2), A, 'so_2025', w), ' tỷ']),
+      tile('Độ phủ Sub-D 2026', v(pct(r.pen_2026, 0), 'pen_2026', r.pen_2026 < s.pen_2026 ? 'dn' : 'up'), [S(num(r.buying_2026, 0), A, 'buying_2026', w), '/', S(num(r.active_base, 0), A, 'active_base', w), ' shop · South ', S(pct(s.pen_2026, 0), A, 'pen_2026', sw)], RK('pen_2026')),
+      tile('Shop mới / mất 2026', (() => { const x = el('span', 'v'); x.append(S(num(r.new_2026, 0), A, 'new_2026', w, 'up'), ' / ', S(num(r.lost_2026, 0), A, 'lost_2026', w, 'dn')); return x; })(), ['Ròng ', S(sgn(r.net_dev, 0), A, 'net_dev', w, tone(r.net_dev)), ' shop'], RK('net_dev')),
+      tile('Key SD đạt / dự kiến đạt mốc', (() => { const x = el('span', 'v'); x.append(S(num(r.keysd_ok, 0), A, 'keysd_ok', w), ' / ', S(num(r.keysd, 0), A, 'keysd', w)); return x; })(), [S(num(r.keysd_zero, 0), A, 'keysd_zero', w, r.keysd_zero ? 'dn' : ''), ' Key SD chưa S.Out H2'], RK('keysd_ok_rate')),
+    );
+  }
+
+  function challenges(asm) {
+    const ds = C.ds('challenges'); const tb = document.querySelector('#tb-ch tbody');
+    if (ds.status !== 'ok') { tb.replaceChildren(); return; }
+    const rows = C.applySort(ds.data.filter((r) => r.asm === asm), 'ch', {f: 'no', dir: 1});
+    document.getElementById('ch-title').textContent = 'Câu hỏi challenge hôm nay · ' + rows.length + ' câu';
+    tb.replaceChildren(...rows.map((r) => {
+      const tr = el('tr'); tr.dataset.key = r.id;
+      const tp = el('td'); tp.append(el('span', 'tp', r.topic));
+      tr.append(el('td', 'n', num(r.no, 0)), tp, el('td', 'q', r.question), el('td', 'a', r.ask)); return tr;
+    }));
+  }
+
+  const FUN = [['f_active', 'Shop Active trong mapping'], ['f_ever', 'Đã từng mua CAC (2024–26)'], ['f_2025', 'Có mua năm 2025'], ['f_2026', 'Có mua YTD/2026'], ['f_90', 'Có S.Out 90 ngày gần nhất'], ['f_key', 'Key SD (S.Out)']];
+  function funnel(r) {
+    const box = document.getElementById('funnel'); const base = r.f_active || 1;
+    box.replaceChildren(...FUN.map(([f, lab]) => {
+      const row = el('div', 'cac-fs'); const tr = el('div', 'tr'); const br = el('div', 'br' + (f === 'f_2026' || f === 'f_90' ? ' hot' : ''));
+      br.style.width = Math.max(1, r[f] / base * 100) + '%';
+      const vl = el('span', 'vl'); vl.append(S(num(r[f], 0), 'asm_scorecard', f, W(r.asm)), ' · ' + Math.round(r[f] / base * 100) + '%');
+      tr.append(br, vl); row.append(el('span', 'lb', lab), tr); return row;
+    }));
+  }
+
+  function prov(asm) {
+    const ds = C.ds('asm_province'); const tb = document.querySelector('#tb-prov tbody');
+    if (ds.status !== 'ok') { tb.replaceChildren(); return; }
+    const rows = C.applySort(ds.data.filter((r) => r.asm === asm), 'prov', {f: 'ytd_2026', dir: -1});
+    tb.replaceChildren(...rows.map((r) => {
+      const tr = el('tr'); tr.dataset.key = r.key;
+      tr.append(el('td', 'nowrap', r.province), el('td', 'n', num(r.active_base, 0)), el('td', 'n', num(r.buying_2026, 0)), el('td', 'n', pct(r.pen_2026, 0)),
+        el('td', 'n', num(r.ytd_2025, 2)), el('td', 'n', num(r.ytd_2026, 2)), el('td', 'n ' + tone(r.gr_ytd), spct(r.gr_ytd, 0)), el('td', 'n ' + tone(r.gap_ytd), sgn(r.gap_ytd, 2)),
+        el('td', 'n', num(r.new_2026, 0)), el('td', 'n' + (r.lost_2026 ? ' dn' : ''), num(r.lost_2026, 0)), el('td', 'n', num(r.white_space, 0)), el('td', 'n', num(r.keysd, 0)));
+      return tr;
+    }));
+  }
+
+  const NOTES = {
+    lost: 'Có S.Out năm 2025, chưa có S.Out YTD/2026. Xếp theo doanh số 2025. Yêu cầu: gặp chủ shop, tìm lý do, chốt đơn đầu tiên.',
+    cool: 'Vẫn mua 2026 nhưng hơn 60 ngày chưa S.Out, hoặc YTD giảm hơn 30% (shop ≥ 100 tr cùng kỳ). Yêu cầu: tìm nguyên nhân giá, hàng hay đối thủ.',
+    up: 'Shop mới 2026, tăng ≥ 30% (≥ 50 tr), hoặc ứng viên Key SD. Yêu cầu: tăng tần suất ghé, mở thêm model, chuẩn bị hồ sơ Key SD.',
+    oks: 'Doanh số chương trình (MRP ÷ 1,1 × 0,8, triệu) từ 01/07. "Cần/tháng" = phần thiếu tới mốc kế chia 2,2 tháng còn lại.',
+    ws: 'Shop Active trong mapping, chưa từng có S.Out CAC 2024–2026. Đây là nguồn mở rộng hệ thống Sub-D CAC.',
+  };
+  document.querySelectorAll('#seg button').forEach((b) => b.addEventListener('click', () => { st.list = b.dataset.list; C.render(); }));
+  ['tb-tgt','tb-ms','tb-cover','tb-dl','tb-cmt','tb-src','tb-ch','tb-prov','tb-lost','tb-cool','tb-up','tb-oks','tb-ws'].forEach((id) => C.sortable(document.getElementById(id), id));
+  const pcls = (s) => 'pill p' + String(s).charAt(0);
+  const srcFlag = (r) => /\(Y - (WS|PJ)\)/.test(r.src_main || '');
+  const XC = {'N': 'p1', 'Y - WS': 'p4', 'Y - PJ': 'p5'};
+  const XL = {'N': 'N · đúng tuyến', 'Y - WS': 'Y-WS · trái tuyến (NPP Bắc/Trung)', 'Y - PJ': 'Y-PJ · sai kênh (nhà thầu dự án)'};
+  function source(asm) {
+    const box = document.getElementById('src-mix'); const dm = C.ds('asm_source_mix');
+    if (dm.status === 'ok') {
+      const rows = ['N', 'Y - WS', 'Y - PJ'].map((c) => dm.data.find((r) => r.asm === asm && r.cross === c)).filter(Boolean);
+      box.replaceChildren(...rows.map((r) => {
+        const w = 'asm=' + C.enc(asm) + '&cross=' + C.enc(r.cross);
+        const row = el('div', 'cac-fs'); const tr = el('div', 'tr'); const br = el('div', 'br ' + (r.cross === 'N' ? '' : 'hot'));
+        br.style.width = Math.max(0.5, (r.share_2026 || 0) * 100) + '%';
+        const vl = el('span', 'vl'); vl.append(S(num(r.ytd_2026, 2), 'asm_source_mix', 'ytd_2026', w), ' tỷ · ', S(pct(r.share_2026, 1), 'asm_source_mix', 'share_2026', w), ' · 2024: ', S(num(r.so_2024, 2), 'asm_source_mix', 'so_2024', w), ' · 2025: ', S(num(r.so_2025, 2), 'asm_source_mix', 'so_2025', w), ' · ', S(num(r.stores_2026, 0), 'asm_source_mix', 'stores_2026', w), ' shop');
+        const lb = el('span', 'lb'); lb.append(el('span', 'pill ' + XC[r.cross], XL[r.cross]));
+        tr.append(br, vl); row.append(lb, tr); return row;
+      }));
+    } else box.replaceChildren();
+    const ds = C.ds('asm_source'); const tb = document.querySelector('#tb-src tbody');
+    if (ds.status !== 'ok') { tb.replaceChildren(); return; }
+    const rows = C.applySort(ds.data.filter((r) => r.asm === asm), 'tb-src', {f: 'ytd_2026', dir: -1});
+    tb.replaceChildren(...rows.map((r) => {
+      const tr = el('tr'); tr.dataset.key = r.key; const c = el('td'); c.append(el('span', 'pill ' + XC[r.cross], r.cross));
+      tr.append(el('td', 'nowrap', r.name), c, el('td', 'n', num(r.so_2024, 2)), el('td', 'n', num(r.so_2025, 2)), el('td', 'n', num(r.ytd_2026, 2)), el('td', 'n', pct(r.share_2026, 1)), el('td', 'n', num(r.stores_2026, 0)));
+      return tr;
+    }));
+  }
+
+  function lists(asm) {
+    document.querySelectorAll('#seg button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.list === st.list)));
+    document.querySelectorAll('#card-lists table').forEach((t) => { t.hidden = t.dataset.list !== st.list; });
+    document.getElementById('list-note').textContent = NOTES[st.list];
+    const L = st.list;
+    if (L === 'oks') {
+      const ds = C.ds('keysd_h2'); const tb = document.querySelector('#tb-oks tbody'); if (ds.status !== 'ok') return tb.replaceChildren();
+      const rows = C.applySort(ds.data.filter((r) => r.asm === asm), 'tb-oks', {f: 'h2_td', dir: -1});
+      tb.replaceChildren(...rows.map((r) => {
+        const tr = el('tr'); tr.dataset.key = r.code; const stc = el('td'); stc.append(el('span', pcls(r.status), r.status));
+        const h2 = el('td', 'n prog', num(r.h2_td, 0)); h2.style.setProperty('--w', (r.next_th ? Math.min(100, r.h2_td / r.next_th * 100) : 100) + '%');
+        tr.append(el('td', 'nowrap', r.name), el('td', '', r.grade), el('td', 'n', num(r.m7, 0)), el('td', 'n', num(r.m8, 0)), el('td', 'n', num(r.m9, 0)), el('td', 'n', num(r.m10, 0)), h2,
+          el('td', '', r.tier_now), el('td', '', r.next_tier), el('td', 'n', num(r.gap_next, 0)), el('td', 'n', num(r.need_pm, 0)),
+          el('td', 'n' + (r.days_since > 30 ? ' dn' : ''), r.days_since == null ? '—' : num(r.days_since, 0)), stc);
+        return tr;
+      }));
+      return;
+    }
+    if (L === 'ws') {
+      const ds = C.ds('white_space'); const tb = document.querySelector('#tb-ws tbody'); if (ds.status !== 'ok') return tb.replaceChildren();
+      const rows = C.applySort(ds.data.filter((r) => r.asm === asm), 'tb-ws', {f: 'province', dir: 1});
+      tb.replaceChildren(...rows.map((r) => { const tr = el('tr'); tr.dataset.key = r.code; tr.append(el('td', 'nowrap', r.code), el('td', 'nowrap', r.name), el('td', 'nowrap', r.province)); return tr; }));
+      return;
+    }
+    const ds = C.ds('store_tiering'); const tb = document.querySelector('#tb-' + L + ' tbody'); if (ds.status !== 'ok') return tb.replaceChildren();
+    const W8 = {lost: '1. Lấy lại', cool: '2. Đang nguội', up: '3. Đang lên'}[L];
+    const def = {lost: {f: 'so_2025', dir: -1}, cool: {f: 'ytd_2025', dir: -1}, up: {f: 'ytd_2026', dir: -1}}[L];
+    const rows = C.applySort(ds.data.filter((r) => r.asm === asm && r.watch === W8), 'tb-' + L, def);
+    tb.replaceChildren(...rows.map((r) => {
+      const tr = el('tr'); tr.dataset.key = r.code;
+      const base = [el('td', 'nowrap', r.code), el('td', 'nowrap', r.name), el('td', 'nowrap', r.province)];
+      if (L === 'lost') tr.append(...base, el('td', 'n', num(r.so_2024, 0)), el('td', 'n', num(r.so_2025, 0)), el('td', 'nowrap', r.last_so), el('td', 'n dn', num(r.days_since, 0)), el('td', 'nowrap', r.key_grade), el('td', 'nowrap' + (srcFlag(r) ? ' dn' : ''), r.src_main || ''));
+      if (L === 'cool') tr.append(...base, el('td', 'n', num(r.ytd_2025, 0)), el('td', 'n', num(r.ytd_2026, 0)), el('td', 'n ' + tone(r.gr_ytd), spct(r.gr_ytd, 0)),
+        el('td', 'n', num(r.q3_2025, 0)), el('td', 'n', num(r.q3_2026, 0)), el('td', 'n' + (r.days_since > 60 ? ' dn' : ''), num(r.days_since, 0)), el('td', 'nowrap', r.key_grade), el('td', 'nowrap' + (srcFlag(r) ? ' dn' : ''), r.src_main || ''));
+      if (L === 'up') tr.append(...base, el('td', 'n', num(r.ytd_2025, 0)), el('td', 'n', num(r.ytd_2026, 0)), el('td', 'n ' + tone(r.gr_ytd), spct(r.gr_ytd, 0)),
+        el('td', 'n', num(r.months_6m, 0)), el('td', r.new_flag ? 'up nowrap' : '', r.new_flag), el('td', 'up nowrap', r.keysd_candidate), el('td', 'nowrap' + (srcFlag(r) ? ' dn' : ''), r.src_main || ''));
+      return tr;
+    }));
+  }
+
+  const CL = {open: 'Đang mở', done: 'Đã làm', partial: 'Một phần', missed: 'Không làm'};
+  function commitments(asm) {
+    const ds = C.ds('commitments'); const tb = document.querySelector('#tb-cmt tbody');
+    if (ds.status !== 'ok') { tb.replaceChildren(); return; }
+    const today = new Date().toISOString().slice(0, 10);
+    const rows = C.applySort(ds.data.filter((r) => r.asm === asm), 'tb-cmt', {f: 'meeting_date', dir: -1});
+    const open = rows.filter((r) => r.status === 'open').length, over = rows.filter((r) => r.status === 'open' && r.due && r.due < today).length;
+    document.getElementById('cmt-title').textContent = 'Cam kết từ các buổi 1:1 trước · ' + open + ' đang mở' + (over ? ' · ' + over + ' quá hạn' : '');
+    if (!rows.length) { const tr = el('tr'); const td = el('td', '', 'Chưa có cam kết nào của ' + asm + '. Ghi cam kết đầu tiên ở trang "Cam kết 1:1 ASM".'); td.colSpan = 7; tr.append(td); tb.replaceChildren(tr); return; }
+    tb.replaceChildren(...rows.map((r) => { const tr = el('tr'); tr.dataset.key = r.id; const s = el('td'); const ov = r.status === 'open' && r.due && r.due < today;
+      s.append(el('span', 'pill ' + ({open: ov ? 'p5' : 'p3', done: 'p1', partial: 'p4', missed: 'p5'}[r.status] || ''), ov ? 'Quá hạn' : (CL[r.status] || r.status)));
+      tr.append(el('td', 'nowrap', r.meeting_date), el('td', 'nowrap', r.topic || ''), el('td', 'q', r.content), el('td', 'nowrap', r.target || ''), el('td', 'nowrap' + (ov ? ' dn' : ''), r.due || ''), s, el('td', 'q', r.result || '')); return tr; }));
+  }
+  document.querySelectorAll('.cac-jump [data-go]').forEach((b) => b.addEventListener('click', () => { const t = document.getElementById(b.dataset.go); if (t) t.scrollIntoView({behavior: 'smooth', block: 'start'}); }));
+  function years(r) {
+    const A = 'asm_scorecard', w = W(r.asm);
+    const g = (a, b) => (b ? a / b - 1 : null);
+    const cell = (lab, f, sub) => { const d = el('div', 'cac-yr'); d.append(el('span', 'k', lab), S(num(r[f], 2), A, f, w, 'v'), sub || el('span', 's', '')); return d; };
+    const sub = (txt, v) => { const s = el('span', 's'); s.append(txt, el('b', tone(v), spct(v, 0))); return s; };
+    const dz = (f) => { const x = r[f]; const s = el('span', 's'); if (x > 0) s.append('gồm ', S(num(x, 2), A, f, w), ' tỷ shop Deactive'); return s; };
+    document.getElementById('yr-strip').replaceChildren(
+      cell('Cả năm 2024', 'so_2024', dz('so24_deact')), cell('Cả năm 2025', 'so_2025', (() => { const s = sub('vs 2024: ', g(r.so_2025, r.so_2024)); if (r.so25_deact > 0) s.append(' · gồm ', S(num(r.so25_deact, 2), A, 'so25_deact', w), ' tỷ Deactive'); return s; })()),
+      el('div', 'cac-yrsep'),
+      cell('YTD 2024', 'ytd_2024'), cell('YTD 2025', 'ytd_2025', sub('vs YTD/24: ', g(r.ytd_2025, r.ytd_2024))), cell('YTD 2026', 'ytd_2026', sub('vs YTD/25: ', g(r.ytd_2026, r.ytd_2025))));
+  }
+  function coverage(asm) {
+    const ds = C.ds('asm_coverage'); const tb = document.querySelector('#tb-cover tbody');
+    if (ds.status !== 'ok') { tb.replaceChildren(); return; }
+    const all = ds.data.filter((r) => r.asm === asm);
+    const tot = all.find((r) => r.province === 'Tổng ASM');
+    const rows = C.applySort(all.filter((r) => r.province !== 'Tổng ASM'), 'tb-cover', {f: 'active', dir: -1});
+    if (tot) document.getElementById('cover-title').textContent = 'Độ phủ trên ' + tot.active + ' shop đang Active: phủ 2026 ' + pct(tot.pen26, 0) + ' (South ' + pct(tot.south_pen, 0) + ')' + (tot.need_south ? ', cần mở thêm ' + tot.need_south + ' shop' : '');
+    const line = (r, cls) => { const tr = el('tr', cls || ''); tr.dataset.key = r.key; const pc = (v, prev) => el('td', 'n ' + (prev == null || v == null ? '' : v < prev ? 'dn' : v > prev ? 'up' : ''), pct(v, 0));
+      tr.append(el('td', 'nowrap', r.province === 'Tổng ASM' ? 'Tổng ' + asm : r.province), el('td', 'n', num(r.active, 0)), el('td', 'n', num(r.b24, 0)), el('td', 'n', num(r.b25, 0)), el('td', 'n', num(r.b26, 0)),
+        pc(r.pen24), pc(r.pen25, r.pen24), pc(r.pen26, r.pen25), el('td', 'n' + (r.sleep ? ' wn' : ''), num(r.sleep, 0)), el('td', 'n', num(r.never, 0)), el('td', 'n' + (r.need_south ? ' dn' : ''), r.need_south ? '+' + num(r.need_south, 0) : '0'));
+      return tr; };
+    tb.replaceChildren(...rows.map((r) => line(r)), ...(tot && rows.length > 1 ? [line(tot, 'tot')] : []));
+  }
+  const dq = document.getElementById('dl-q'), dst = document.getElementById('dl-status'), dpv = document.getElementById('dl-prov');
+  [dq, dst, dpv].forEach((e) => e.addEventListener(e.tagName === 'INPUT' ? 'input' : 'change', () => C.render()));
+  function dealers(asm) {
+    const ds = C.ds('store_tiering'); const tb = document.querySelector('#tb-dl tbody'); const tf = document.querySelector('#tb-dl tfoot');
+    if (ds.status !== 'ok') { tb.replaceChildren(); tf.replaceChildren(); return; }
+    const mine = ds.data.filter((r) => r.asm === asm);
+    const provs = [...new Set(mine.map((r) => r.province))].sort();
+    const pk = asm + '|' + provs.join(',');
+    if (dpv.dataset.k !== pk) { const cur = dpv.value; dpv.replaceChildren(new Option('Tất cả tỉnh', ''), ...provs.map((p) => new Option(p, p))); dpv.value = provs.includes(cur) ? cur : ''; dpv.dataset.k = pk; }
+    const t = dq.value.trim().toLowerCase();
+    let rows = mine.filter((r) => (!dst.value || r.map_status === dst.value) && (!dpv.value || r.province === dpv.value) && (!t || [r.name, r.code, r.province].join(' ').toLowerCase().includes(t)));
+    rows = rows.map((r) => ({...r, h1_vs: r.h1_25 > 0 ? r.h1_26 / r.h1_25 - 1 : null}));
+    rows = C.applySort(rows, 'tb-dl', {f: 'so_2025', dir: -1});
+    const nAct = rows.filter((r) => r.map_status === 'Active').length;
+    document.getElementById('dl-title').textContent = 'Đại lý có S.Out trong 3 năm · ' + rows.length + ' shop (' + nAct + ' Active, ' + (rows.length - nAct) + ' Deactive)';
+    const H = ['h1_24', 'h2_24', 'h1_25', 'h2_25', 'h1_26', 'h2_26'], Y = ['so_2024', 'so_2025', 'ytd_2026'];
+    const v = (x) => (x ? num(x, 0) : '');
+    tb.replaceChildren(...rows.map((r) => {
+      const tr = el('tr', r.map_status === 'Deactive' ? 'deact' : ''); tr.dataset.key = r.code;
+      const stc = el('td'); stc.append(el('span', 'pill ' + (r.map_status === 'Active' ? 'p1' : 'p5'), r.map_status || '—'));
+      const nm = el('td', 'nowrap', r.name); nm.title = r.name;
+      tr.append(el('td', 'nowrap', r.code), nm, el('td', 'nowrap', r.province),
+        ...H.map((f, k) => el('td', 'n' + (k % 2 === 0 ? ' hgrp' : ''), v(r[f]))),
+        el('td', 'n ' + tone(r.h1_vs), r.h1_vs == null ? (r.h1_26 > 0 ? 'Mới' : '') : spct(r.h1_vs, 0)),
+        ...Y.map((f) => el('td', 'n ygrp', v(r[f]))), stc);
+      return tr;
+    }));
+    const sum = (f) => rows.reduce((a, r) => a + (r[f] || 0), 0);
+    const ft = el('tr', 'tot'); const h125 = sum('h1_25'), h126 = sum('h1_26');
+    const lab = el('td', 'nowrap', 'Tổng ' + rows.length + ' shop'); lab.colSpan = 3;
+    ft.append(lab, ...H.map((f, k) => el('td', 'n' + (k % 2 === 0 ? ' hgrp' : ''), num(sum(f), 0))), el('td', 'n ' + tone(h125 ? h126 / h125 - 1 : null), h125 ? spct(h126 / h125 - 1, 0) : ''), ...Y.map((f) => el('td', 'n ygrp', num(sum(f), 0))), el('td', '', ''));
+    tf.replaceChildren(ft);
+  }
+
+  // ---------- Target & Perf tháng hiện tại
+  const T = 'asm_target';
+  const achCell = (r, w) => { const td = el('td', 'tgt-ach'); const bar = el('span', 'tb'); const f = el('span', 'tf' + (r.ach >= r.time_gone ? ' ok' : ''));
+    f.style.width = Math.min(100, (r.ach || 0) * 100) + '%'; const mk = el('span', 'tm'); mk.style.left = (r.time_gone * 100) + '%'; bar.append(f, mk);
+    td.append(bar, S(pct(r.ach, 0), T, 'ach', w, r.ach >= r.time_gone ? 'up' : 'dn')); return td; };
+  function targetTeam(S0) {
+    const ds = C.ds(T); const tb = document.querySelector('#tb-tgt tbody'), tf = document.querySelector('#tb-tgt tfoot');
+    if (ds.status !== 'ok') { tb.replaceChildren(); tf.replaceChildren(); return; }
+    const all = ds.data; const tk = S0.sup ? 'Sup · ' + S0.sup : TOTAL; const tot = all.find((r) => r.asm === tk);
+    const rows = C.applySort(all.filter((r) => r.kind === 'asm' && (!S0.sup || C.sel().has(r.asm))), 'tb-tgt', {f: 'proj_ach', dir: -1});
+    if (tot) document.getElementById('tgt-team-title').textContent = 'Target & Perf tháng ' + tot.month.slice(5) + '/' + tot.month.slice(0, 4) + ' · ' + (S0.sup ? 'Sup ' + S0.sup : 'team ASM') + ' · đến ngày ' + tot.day + '/' + tot.dim + ' (' + pct(tot.time_gone, 0) + ' thời gian)';
+    const line = (r, cls) => { const tr = el('tr', cls || ''); tr.dataset.key = r.asm; const w = W(r.asm);
+      const nm = el('td', 'nowrap'); if (cls) nm.append(r.kind === 'total' ? 'Tổng team' : 'Tổng ' + r.asm.replace('Sup · ', 'Sup ')); else { const b = el('button', 'cac-lnk', r.asm); b.type = 'button'; b.addEventListener('click', () => dash.setParams({asm: r.asm})); nm.append(b); }
+      tr.append(nm, el('td', 'n', num(r.tgt_so, 0)), el('td', 'n', num(r.mtd_so, 0)), achCell(r, w), el('td', 'n', num(r.proj, 0)),
+        el('td', 'n ' + (r.proj_ach >= 1 ? 'up' : r.proj_ach >= 0.8 ? 'wn' : 'dn'), pct(r.proj_ach, 0)), el('td', 'n' + (r.gap > 0 ? ' dn' : ''), r.gap > 0 ? num(r.gap, 0) : '✓'),
+        el('td', 'n', r.gap > 0 ? num(r.need_day, 0) : '—'), el('td', 'n', num(r.tgt_cover, 0)), el('td', 'n ' + (r.cover >= r.tgt_cover ? 'up' : 'dn'), num(r.cover, 0)), el('td', 'n', num(r.mtd_py, 0)));
+      return tr; };
+    tb.replaceChildren(...rows.map((r) => line(r))); tf.replaceChildren(...(tot ? [line(tot, 'tot')] : []));
+  }
+  function targetAsm(asm) {
+    const ds = C.ds(T); const r = ds.status === 'ok' ? ds.data.find((x) => x.asm === asm) : null;
+    const tiles = document.getElementById('tgt-tiles'), bar = document.getElementById('tgt-bar');
+    if (!r) { document.getElementById('tgt-title').textContent = 'Chưa có target tháng này cho ' + asm; tiles.replaceChildren(); bar.replaceChildren(); return; }
+    const w = W(asm); const v = (t, f, cls) => S(t, T, f, w, 'v ' + (cls || ''));
+    document.getElementById('tgt-title').textContent = 'Tháng ' + r.month.slice(5) + '/' + r.month.slice(0, 4) + ' · số liệu đến ngày ' + r.day + '/' + r.dim + ' · đã qua ' + pct(r.time_gone, 0) + ' thời gian';
+    const b = el('div', 'tb big'); const f = el('span', 'tf' + (r.ach >= r.time_gone ? ' ok' : '')); f.style.width = Math.min(100, (r.ach || 0) * 100) + '%';
+    const mk = el('span', 'tm'); mk.style.left = r.time_gone * 100 + '%'; b.append(f, mk);
+    const lab = el('div', 'tl'); lab.append('Đạt ', S(num(r.mtd_so, 0), T, 'mtd_so', w), ' / ', S(num(r.tgt_so, 0), T, 'tgt_so', w), ' triệu · ', S(pct(r.ach, 0), T, 'ach', w, r.ach >= r.time_gone ? 'up' : 'dn'),
+      r.ach >= r.time_gone ? ' · đang đi trước tiến độ' : ' · chậm ' + Math.round((r.time_gone - r.ach) * 100) + ' điểm % so với thời gian');
+    bar.replaceChildren(lab, b);
+    tiles.replaceChildren(
+      tile('Target SO tháng (triệu)', v(num(r.tgt_so, 0), 'tgt_so'), ['T10/2025: ', S(num(r.so_py, 0), T, 'so_py', w), ' · GR target ', S(spct(r.tgt_gr, 0), T, 'tgt_gr', w)], null, true),
+      tile('Đạt MTD (triệu)', v(num(r.mtd_so, 0), 'mtd_so', r.ach >= r.time_gone ? 'up' : 'dn'), ['Cùng kỳ T10/25: ', S(num(r.mtd_py, 0), T, 'mtd_py', w), ' · ', S(num(r.buying, 0), T, 'buying', w), ' shop đang mua']),
+      tile('Dự kiến cuối tháng', v(pct(r.proj_ach, 0), 'proj_ach', r.proj_ach >= 1 ? 'up' : r.proj_ach >= 0.8 ? 'wn' : 'dn'), ['Theo nhịp hiện tại: ', S(num(r.proj, 0), T, 'proj', w), ' triệu']),
+      tile(r.gap > 0 ? 'Còn thiếu (triệu)' : 'Đã đạt target', v(r.gap > 0 ? num(r.gap, 0) : '✓', 'gap', r.gap > 0 ? 'dn' : 'up'), r.gap > 0 ? ['Cần ', S(num(r.need_day, 0), T, 'need_day', w), ' triệu/ngày trong ' + (r.dim - r.day) + ' ngày còn lại'] : ['Vượt ', num(r.mtd_so - r.tgt_so, 0), ' triệu']),
+      tile('Cover: đạt / target', (() => { const x = el('span', 'v ' + (r.cover >= r.tgt_cover ? 'up' : 'dn')); x.append(S(num(r.cover, 0), T, 'cover', w), ' / ', S(num(r.tgt_cover, 0), T, 'tgt_cover', w)); return x; })(), ['Shop mới/kích hoạt lại tháng này · T10/25: ', S(num(r.cover_py, 0), T, 'cover_py', w)]),
+    );
+  }
+  const msf = document.getElementById('ms-f'); msf.addEventListener('change', () => C.render());
+  function monthShops(asm) {
+    const ds = C.ds('asm_month_shops'); const tb = document.querySelector('#tb-ms tbody'); if (ds.status !== 'ok') return tb.replaceChildren();
+    const mine = ds.data.filter((r) => r.asm === asm); const miss = (r) => !r.mtd && (r.last_m > 0 || r.m_2 > 0 || r.m_3 > 0 || r.ly_m > 0);
+    const rows = C.applySort(mine.filter((r) => !msf.value || (msf.value === 'buy' ? r.mtd > 0 : msf.value === 'miss' ? miss(r) : !!r.cover)), 'tb-ms', {f: 'mtd', dir: -1});
+    const nb = mine.filter((r) => r.mtd > 0).length, nm = mine.filter(miss).length;
+    document.getElementById('mshop-title').textContent = 'Shop tháng này: ' + nb + ' đang mua · ' + nm + ' chưa mua (3 tháng trước/cùng kỳ có mua)';
+    const v = (x) => (x ? num(x, 0) : '');
+    tb.replaceChildren(...rows.map((r) => { const tr = el('tr', miss(r) ? 'miss' : ''); tr.dataset.key = r.code;
+      const cv = el('td'); if (r.cover) cv.append(el('span', 'pill p1', r.cover));
+      const stc = el('td'); stc.append(el('span', 'pill ' + (r.status === 'Active' ? 'p1' : 'p5'), r.status || '—'));
+      tr.append(el('td', 'nowrap', r.code), el('td', 'nowrap', r.name), el('td', 'nowrap', r.province), el('td', 'n' + (r.mtd ? ' up' : ''), v(r.mtd)), el('td', 'n', v(r.last_m)), el('td', 'n', v(r.m_2)), el('td', 'n', v(r.m_3)), el('td', 'n', v(r.ly_m)), cv, el('td', 'nowrap', r.last_so), stc); return tr; }));
+  }
+  C.renderOne = (rows, asm) => {
+    const pick = document.getElementById('one-pick'), body = document.getElementById('one-body');
+    pick.hidden = !!asm; body.hidden = !asm; document.getElementById('card-tgt-team').hidden = !!asm;
+    if (!asm) { picker(rows); targetTeam(C.sel()); return; }
+    const r = rows.find((x) => x.asm === asm), s = rows.find((x) => x.asm === TOTAL); if (!r) return;
+    profile(r, s); tiles(r, s); commitments(asm); targetAsm(asm); monthShops(asm); years(r); coverage(asm); dealers(asm); challenges(asm); source(asm); funnel(r); C.monthChart(asm); prov(asm);
+    ['lost','cool','up'].forEach((k) => { const e = document.getElementById('n-' + k); e.dataset.where = W(asm); e.textContent = num(r['w_' + k], 0); });
+    const nk = document.getElementById('n-ks'); nk.dataset.where = W(asm); nk.textContent = num(r.keysd, 0);
+    const nw = document.getElementById('n-ws'); nw.dataset.where = W(asm); nw.textContent = num(r.white_space, 0);
+    lists(asm);
+  };
+  C.render();
+})();
+</script>
+
+
+</div>
+<script>
+(()=>{const ITER=310000, KEY='cac_auth_v1';
+const $=(i)=>document.getElementById(i), te=new TextEncoder();
+const hex=async(s)=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',te.encode(s)))].map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,20);
+const b64=(u)=>btoa(String.fromCharCode(...new Uint8Array(u))), ub64=(s)=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const getBin=async(id)=>{const r=await fetch('d/'+id+'.bin',{cache:'no-store'}); return r.ok?new Uint8Array(await r.arrayBuffer()):null;};
+async function open(id,keyRaw,pw,buf){
+  buf=buf||await getBin(id); if(!buf) throw new Error('nouser'); const salt=buf.slice(0,16), iv=buf.slice(16,28), ct=buf.slice(28);
+  let key;
+  if(keyRaw){ key=await crypto.subtle.importKey('raw',keyRaw,'AES-GCM',true,['decrypt']); }
+  else { const base=await crypto.subtle.importKey('raw',te.encode(pw),'PBKDF2',false,['deriveKey']);
+    key=await crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:ITER,hash:'SHA-256'},base,{name:'AES-GCM',length:256},true,['decrypt']); }
+  let plain; try{ plain=await crypto.subtle.decrypt({name:'AES-GCM',iv},key,ct); }catch(e){ throw new Error('badpw'); }
+  const txt=await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+  return {p:JSON.parse(txt), raw:await crypto.subtle.exportKey('raw',key)};
+}
+function boot(p){
+  document.body.classList.add('authed', p.role==='admin'?'role-admin':'role-view');
+  if(p.lock.sup) document.body.classList.add('lock-sup'); if(p.lock.asm) document.body.classList.add('lock-asm');
+  const w=$('who'); w.hidden=false; w.textContent=p.name+' · '; const lo=document.createElement('button'); lo.type='button'; lo.textContent='Đăng xuất';
+  lo.onclick=()=>{try{localStorage.removeItem(KEY)}catch(e){} location.hash=''; location.reload();}; w.append(lo);
+  const hideF=(id)=>{const e=$(id); if(e){const f=e.closest('.cac-fld'); if(f) f.style.display='none';}};
+  if(p.lock.sup) hideF('sup-sel'); if(p.lock.asm){ hideF('sup-sel'); hideF('asm-sel'); }
+  if(p.role!=='admin'){ const h=$('sec-req'); if(h&&h.lastChild) h.lastChild.textContent='Hành động cho ASM'; const j=document.querySelector('[data-go=sec-req]'); if(j) j.textContent='F · Hành động'; }
+  $('login').remove(); window.dash._boot(p.data,p.lock);
+  if(p.role!=='admin' && window.CAC && CAC.showTab) CAC.showTab('one');
+}
+(async()=>{ try{ const s=JSON.parse(localStorage.getItem(KEY)||'null'); if(s){ const o=await open(s.id,ub64(s.k)); boot(o.p); return; } }catch(e){ try{localStorage.removeItem(KEY)}catch(_){} } })();
+const MAXF=5, LOCKMSG='Tài khoản đã bị khoá sau 5 lần nhập sai. Liên hệ admin (anh Vũ) để lấy lại mật khẩu.';
+const fk=(id)=>'cac_fail_'+id, gf=(id)=>{try{return +localStorage.getItem(fk(id))||0}catch(_){return 0}}, sf=(id,n)=>{try{n?localStorage.setItem(fk(id),n):localStorage.removeItem(fk(id))}catch(_){}};
+$('lf').addEventListener('submit',async(e)=>{e.preventDefault(); const b=$('lb'), er=$('le'); er.textContent='';
+  b.disabled=true; b.textContent='Đang mở dữ liệu…';
+  const id=await hex('cac:'+$('lu').value.toLowerCase().trim()); let buf=null; try{buf=await getBin(id)}catch(_){}
+  const lid=id+'_'+(buf?[...buf.slice(0,16)].map(x=>x.toString(16).padStart(2,'0')).join(''):'x');   // khoá gắn với mật khẩu hiện tại; admin cấp mật khẩu mới là tự mở khoá
+  if(gf(lid)>=MAXF){ er.textContent=LOCKMSG; b.disabled=false; b.textContent='Đăng nhập'; return; }
+  try{ const o=await open(id,null,$('lp').value,buf); sf(lid,0);
+    if($('lr').checked){ try{localStorage.setItem(KEY,JSON.stringify({id,k:b64(o.raw)}))}catch(_){} }
+    boot(o.p);
+  }catch(err){
+    if(err.message==='nouser'||err.message==='badpw'){ const n=gf(lid)+1; sf(lid,n);
+      er.textContent= n>=MAXF ? LOCKMSG : 'Sai tài khoản hoặc mật khẩu. Còn '+(MAXF-n)+' lần thử.'; }
+    else er.textContent='Không mở được dữ liệu, thử lại hoặc dùng Chrome/Safari bản mới.';
+    b.disabled=false; b.textContent='Đăng nhập'; }
+});})();
+</script>
+</body></html>
