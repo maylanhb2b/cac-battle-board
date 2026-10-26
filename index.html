@@ -34,7 +34,7 @@ body:not(.authed) #dash-root{display:none}
 <label>Mật khẩu<input type="password" id="lp" name="password" autocomplete="current-password" required></label>
 <label class="rm"><input type="checkbox" id="lr"> Ghi nhớ trên thiết bị này</label>
 <button type="submit" id="lb">Đăng nhập</button><div class="err" id="le" role="alert"></div>
-<p>Dữ liệu được mã hoá, chỉ mở được bằng đúng tài khoản và mật khẩu.</p></form></div>
+<p>Dữ liệu được mã hoá, chỉ mở được bằng đúng tài khoản và mật khẩu. Board ghi nhận thời gian truy cập của từng tài khoản.</p></form></div>
 <div class="cac-user" id="who" hidden></div>
 <div id="dash-root">
 <script>
@@ -1369,7 +1369,18 @@ function boot(p){
   if(p.lock.sup) hideF('sup-sel'); if(p.lock.asm){ hideF('sup-sel'); hideF('asm-sel'); }
   if(p.role!=='admin'){ const h=$('sec-req'); if(h&&h.lastChild) h.lastChild.textContent='Hành động cho ASM'; const j=document.querySelector('[data-go=sec-req]'); if(j) j.textContent='F · Hành động'; }
   $('login').remove(); window.dash._boot(p.data,p.lock);
+  track(p);
   if(p.role!=='admin' && window.CAC && CAC.showTab) CAC.showTab('one');
+}
+const LOG='https://script.google.com/macros/s/AKfycbxyn-_hnhkEVSQXFLfZZyjTLkp1FqwbcIBKIvai-d4EzZJ5X0q1mJMxwv6A41phcGE_/exec';
+function track(p){ if(!LOG) return;
+  const sid=Math.random().toString(36).slice(2,10), dv=/Mobi|Android|iPhone/i.test(navigator.userAgent)?'Điện thoại':'Máy tính';
+  const tab=()=>{const t=document.querySelector('.cac-tab[aria-selected=true]'); return t?t.dataset.tab:'';};
+  const send=(ev)=>{const body=JSON.stringify({ev,u:p.user,n:p.name,s:sid,dv,tab:tab()});
+    if(ev==='leave'&&navigator.sendBeacon){ navigator.sendBeacon(LOG,new Blob([body],{type:'text/plain'})); return; }
+    fetch(LOG,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body}).catch(()=>{}); };
+  send('login'); setInterval(()=>{ if(document.visibilityState==='visible') send('beat'); },60000);
+  window.addEventListener('pagehide',()=>send('leave'));
 }
 (async()=>{ try{ const s=JSON.parse(localStorage.getItem(KEY)||'null'); if(s){ const o=await open(s.id,ub64(s.k)); boot(o.p); return; } }catch(e){ try{localStorage.removeItem(KEY)}catch(_){} } })();
 const MAXF=5, LOCKMSG='Tài khoản đã bị khoá sau 5 lần nhập sai. Liên hệ admin (anh Vũ) để lấy lại mật khẩu.';
