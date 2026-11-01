@@ -256,7 +256,7 @@ _boot:(d,lock)=>{window.__CAC_DATA__=d;window.__CAC_LOCK__=lock;params=Object.as
 </style>
 <div class="cac" id="cac">
   <header class="cac-head" id="top">
-    <span class="cac-eyebrow" id="eyebrow"><span class="eb-date">số liệu đến 24/10/2026</span> · LG ES Channel South · CAC Sell-out (MRP) · Sub-D · Cross Sales</span>
+    <span class="cac-eyebrow" id="eyebrow"><span class="eb-date">số liệu đến 31/10/2026</span> · LG ES Channel South · CAC Sell-out (MRP) · Sub-D · Cross Sales</span>
     <h1 class="cac-title">CAC ASM Battle Board</h1>
     <div class="cac-take" id="take"><span class="dash-skeleton">—</span></div>
   </header>
@@ -309,7 +309,7 @@ _boot:(d,lock)=>{window.__CAC_DATA__=d;window.__CAC_LOCK__=lock;params=Object.as
 
     <div id="one-pick" class="cac-card">
       <h3>Chọn ASM để bắt đầu 1:1</h3>
-      <p class="cac-note">Xếp theo hạng. Mỗi thẻ: tên ASM, zone, tăng trưởng S.Out YTD (01/01–24/10) so với cùng kỳ 2025.</p>
+      <p class="cac-note">Xếp theo hạng. Mỗi thẻ: tên ASM, zone, tăng trưởng S.Out YTD (01/01–31/10) so với cùng kỳ 2025.</p>
       <div class="cac-pick" id="pick" data-source="asm_scorecard"></div>
     </div>
 
@@ -390,10 +390,10 @@ _boot:(d,lock)=>{window.__CAC_DATA__=d;window.__CAC_LOCK__=lock;params=Object.as
       <h2 class="cac-sec" id="sec-sales"><span>C</span>Doanh số năm</h2>
       <div class="cac-card" id="card-month">
         <h3 id="month-title">Tiến độ doanh số theo năm</h3>
-        <p class="cac-note" id="month-note">Triệu VND, giá MRP.<br>Mỗi thanh là cả năm: phần đậm = 01/01–24/10 (YTD), phần nhạt = 25/10–31/12.<br>Thanh 2026: phần đỏ nhạt là dự kiến đến 31/12 phân tích theo cùng kỳ 2025 và 2026.<br>Vạch dọc: mốc bằng 2025 và +10%, +20%.<br>Doanh số quá khứ tính cả shop nay đã Deactive, vì đó là dung lượng thật của thị trường.</p>
+        <p class="cac-note" id="month-note">Triệu VND, giá MRP.<br>Mỗi thanh là cả năm: phần đậm = 01/01–31/10 (YTD), phần nhạt = 01/11–31/12.<br>Thanh 2026: phần đỏ nhạt là dự kiến đến 31/12 phân tích theo cùng kỳ 2025 và 2026.<br>Vạch dọc: mốc bằng 2025 và +10%, +20%.<br>Doanh số quá khứ tính cả shop nay đã Deactive, vì đó là dung lượng thật của thị trường.</p>
         <div class="cac-years" id="yr-strip" data-source="asm_scorecard"></div>
         <div class="cac-chart" id="ch-month" data-source="asm_scorecard"></div>
-        <h3 id="need-title" style="margin-top:var(--cds-gap-md)">Cần nỗ lực thêm bao nhiêu từ 25/10 đến 31/12?</h3>
+        <h3 id="need-title" style="margin-top:var(--cds-gap-md)">Cần nỗ lực thêm bao nhiêu từ 01/11 đến 31/12?</h3>
         <p class="cac-note" id="need-note"></p>
         <div class="cac-scroll">
           <table id="tb-need" data-source="asm_scorecard">
@@ -483,7 +483,7 @@ _boot:(d,lock)=>{window.__CAC_DATA__=d;window.__CAC_LOCK__=lock;params=Object.as
       <h2 class="cac-sec" id="sec-dealers"><span>E</span>Đại lý 3 năm</h2>
       <div class="cac-card" id="card-dl">
         <h3 id="dl-title">Đại lý có S.Out trong 3 năm</h3>
-        <p class="cac-note">Triệu VND, giá MRP. 6 tháng đầu (1H) và 6 tháng cuối (2H) mỗi năm; 2H/26 mới có T7 đến 24/10. Ô trống = không có S.Out. Cột "1H/26 vs 1H/25" so cùng kỳ nửa năm. Dòng cuối là tổng của các shop đang hiển thị.</p>
+        <p class="cac-note">Triệu VND, giá MRP. 6 tháng đầu (1H) và 6 tháng cuối (2H) mỗi năm; 2H/26 mới có T7 đến 31/10. Ô trống = không có S.Out. Cột "1H/26 vs 1H/25" so cùng kỳ nửa năm. Dòng cuối là tổng của các shop đang hiển thị.</p>
         <div class="cac-filter">
           <input type="search" id="dl-q" placeholder="Tìm shop, mã, tỉnh…" aria-label="Tìm đại lý">
           <select id="dl-status" aria-label="Lọc Status"><option value="">Active + Deactive</option><option value="Active">Chỉ Active</option><option value="Deactive">Chỉ Deactive</option></select>
@@ -581,12 +581,12 @@ _boot:(d,lock)=>{window.__CAC_DATA__=d;window.__CAC_LOCK__=lock;params=Object.as
         </div>
       </div>
       <div class="cac-half">
-        <div class="cac-hlab">2H · 01/07 – 31/12/2026 · đang chạy (số liệu đến 24/10)</div>
+        <div class="cac-hlab">2H · 01/07 – 31/12/2026 · đang chạy (số liệu đến 31/10)</div>
         <div class="cac-tiles">
           <div class="cac-tile hero"><span class="k">Key SD đạt / dự kiến đạt mốc 2H</span><span class="v"><span id="k-ok" data-source="asm_scorecard" data-field="keysd_ok">—</span> / <span id="k-n" data-source="asm_scorecard" data-field="keysd">—</span></span><span class="s">Tỷ lệ: <b id="k-rate" data-source="asm_scorecard" data-field="keysd_ok_rate">—</b> · <span id="k-zero" class="dn" data-source="asm_scorecard" data-field="keysd_zero">—</span> chưa có S.Out 2H</span></div>
-          <div class="cac-tile"><span class="k">DS chương trình 2H đến nay (triệu)</span><span class="v" id="k-h2" data-source="asm_scorecard" data-field="keysd_h2">—</span><span class="s">01/07 → 24/10/2026</span></div>
-          <div class="cac-tile"><span class="k">Thưởng 2H tạm tính (triệu)</span><span class="v" id="k-inc" data-source="asm_scorecard" data-field="keysd_inc">—</span><span class="s">Nếu chốt tại 24/10</span></div>
-          <div class="cac-tile"><span class="k">Thưởng 2H dự kiến 31/12 (triệu)</span><span class="v" id="k-pinc" data-source="asm_scorecard" data-field="keysd_proj_inc">—</span><span class="s">Theo mùa vụ H2 (×1,73)</span></div>
+          <div class="cac-tile"><span class="k">DS chương trình 2H đến nay (triệu)</span><span class="v" id="k-h2" data-source="asm_scorecard" data-field="keysd_h2">—</span><span class="s">01/07 → 31/10/2026</span></div>
+          <div class="cac-tile"><span class="k">Thưởng 2H tạm tính (triệu)</span><span class="v" id="k-inc" data-source="asm_scorecard" data-field="keysd_inc">—</span><span class="s">Nếu chốt tại 31/10</span></div>
+          <div class="cac-tile"><span class="k">Thưởng 2H dự kiến 31/12 (triệu)</span><span class="v" id="k-pinc" data-source="asm_scorecard" data-field="keysd_proj_inc">—</span><span class="s">Theo mùa vụ H2 (×1,56)</span></div>
         </div>
       </div>
 
@@ -594,12 +594,12 @@ _boot:(d,lock)=>{window.__CAC_DATA__=d;window.__CAC_LOCK__=lock;params=Object.as
         <h3 id="status-title">Key SD theo trạng thái mốc thưởng</h3>
         <div class="cac-stack" id="ks-stack" data-source="asm_scorecard"></div>
         <div class="cac-legend" id="ks-legend"></div>
-        <p class="cac-note">Trạng thái tính cho 2H. Mốc 1H và 2H giống nhau. Diamond: C ≥ 2,000 tr (1,5%), B ≥ 2,500 tr (2%), cộng thêm 2% khi ≥ 5,000 tr. Gold: C ≥ 700 tr (1%), B ≥ 1,200 tr (1,3%), A ≥ 1,500 tr (1,6%). Dự kiến 31/12 = DS H2 đến nay × 1,73 (tỷ lệ cả H2 / H2 tới 24/10, trung bình 2024–2025 của Sub-D).</p>
+        <p class="cac-note">Trạng thái tính cho 2H. Mốc 1H và 2H giống nhau. Diamond: C ≥ 2,000 tr (1,5%), B ≥ 2,500 tr (2%), cộng thêm 2% khi ≥ 5,000 tr. Gold: C ≥ 700 tr (1%), B ≥ 1,200 tr (1,3%), A ≥ 1,500 tr (1,6%). Dự kiến 31/12 = DS H2 đến nay × 1,56 (tỷ lệ cả H2 / H2 tới 31/10, trung bình 2024–2025 của Sub-D).</p>
       </div>
 
       <div class="cac-card" id="card-ks">
         <h3>Danh sách Key SD: 1H đã đạt gì, 2H còn thiếu bao nhiêu</h3>
-        <p class="cac-note">Triệu VND theo giá chương trình (MRP ÷ 1,1 × 0,8). "Nhịp 2H vs 1H" = DS trung bình/tháng của 2H (01/07–24/10, 3,8 tháng) so với trung bình/tháng của 1H: âm là đang bán chậm hơn 1H. "Cần/tháng" = phần thiếu tới mốc kế 2H ÷ 2,2 tháng còn lại. Gạch đỏ dưới DS 2H = % tới mốc kế.</p>
+        <p class="cac-note">Triệu VND theo giá chương trình (MRP ÷ 1,1 × 0,8). "Nhịp 2H vs 1H" = DS trung bình/tháng của 2H (01/07–31/10, 4 tháng) so với trung bình/tháng của 1H: âm là đang bán chậm hơn 1H. "Cần/tháng" = phần thiếu tới mốc kế 2H ÷ 2 tháng còn lại. Gạch đỏ dưới DS 2H = % tới mốc kế.</p>
         <div class="cac-filter"><input type="search" id="ks-q" placeholder="Tìm shop, mã, tỉnh…" aria-label="Tìm Key SD"></div>
         <div class="cac-scroll">
           <table id="tb-ks" data-source="keysd_h2" data-row-key="code">
@@ -918,14 +918,14 @@ window.CAC = (() => {
 
   C.monthChart = monthChart;
   // Tiến độ theo năm: thanh ngang cả năm 2024 / 2025 / 2026 (YTD + dự kiến)
-  const END = new Date(2026, 9, 24); const MEL = END.getMonth() + END.getDate() / new Date(2026, 10, 0).getDate(); const MREM = 12 - MEL;
+  const END = new Date(2026, 9, 31); const MEL = END.getMonth() + END.getDate() / new Date(2026, 10, 0).getDate(); const MREM = 12 - MEL;
   function monthChart(asm) {
     const box = document.getElementById('ch-month'); const ds = C.ds('asm_scorecard');
     if (ds.status !== 'ok') { box.replaceChildren(); return; }
     const r0 = ds.data.find((x) => x.asm === asm), t = ds.data.find((x) => x.asm === TOTAL); if (!r0 || !t) return;
     const r = {}; ['so_2024', 'so_2025', 'ytd_2024', 'ytd_2025', 'ytd_2026'].forEach((f) => { r[f] = (r0[f] || 0) * 1000; });   // tỷ -> triệu
     const rest25 = r.so_2025 - r.ytd_2025, rr = r.ytd_2026 / MEL;
-    // Dự kiến 31/12: phần còn lại của năm = cùng kỳ 2025 (25/10–31/12) × tốc độ tăng trưởng YTD 2026/2025; thiếu cùng kỳ thì dùng mùa vụ South
+    // Dự kiến 31/12: phần còn lại của năm = cùng kỳ 2025 (01/11–31/12) × tốc độ tăng trưởng YTD 2026/2025; thiếu cùng kỳ thì dùng mùa vụ South
     const gr = r.ytd_2025 > 0 ? r.ytd_2026 / r.ytd_2025 : null;
     const kS = ((t.so_2024 / t.ytd_2024) + (t.so_2025 / t.ytd_2025)) / 2;
     const proj = (gr != null && rest25 > 0) ? r.ytd_2026 + rest25 * gr : r.ytd_2026 * kS;
@@ -960,8 +960,8 @@ window.CAC = (() => {
     rg.append('text').attr('y', (d, i) => (near && i === 1 ? m.t - 24 : m.t - 10)).attr('text-anchor', (d, i) => (near ? (i === 0 ? 'end' : i === 2 ? 'start' : 'middle') : 'middle')).attr('dx', (d, i) => (near ? (i === 0 ? -4 : i === 2 ? 4 : 0) : 0))
       .attr('font-size', 11).attr('fill', 'var(--color-fg-muted)').text((d) => d[1]);
     g.append('rect').attr('x', m.l).attr('width', W - m.l - m.r).attr('height', bw).attr('fill', 'transparent')
-      .on('mousemove', (e, d) => C.showTip(e, [el('div', 'h', d.y + (d.proj ? ' (dự kiến)' : '')), el('div', '', 'YTD 01/01–24/10: ' + num(d.ytd, 0) + ' triệu'),
-        el('div', '', (d.proj ? 'Dự kiến 25/10–31/12: ' : '25/10–31/12: ') + num(d.full - d.ytd, 0) + ' triệu'), el('div', '', (d.proj ? 'Dự kiến cả năm: ' : 'Cả năm: ') + num(d.full, 0) + ' triệu')]))
+      .on('mousemove', (e, d) => C.showTip(e, [el('div', 'h', d.y + (d.proj ? ' (dự kiến)' : '')), el('div', '', 'YTD 01/01–31/10: ' + num(d.ytd, 0) + ' triệu'),
+        el('div', '', (d.proj ? 'Dự kiến 01/11–31/12: ' : '01/11–31/12: ') + num(d.full - d.ytd, 0) + ' triệu'), el('div', '', (d.proj ? 'Dự kiến cả năm: ' : 'Cả năm: ') + num(d.full, 0) + ' triệu')]))
       .on('mouseleave', C.hideTip);
     box.replaceChildren(svg.node());
     // bảng nỗ lực cần thêm (triệu VND)
@@ -974,7 +974,7 @@ window.CAC = (() => {
     const pr = el('tr', 'tot'); const pl = el('td', 'nowrap'); pl.append('Dự kiến theo cùng kỳ 2025 & tốc độ 2026 ', el('span', tone(r.so_2025 ? proj / r.so_2025 - 1 : null), '(' + spct(r.so_2025 ? proj / r.so_2025 - 1 : null, 0) + ' vs 2025)'));
     pr.append(pl, el('td', 'n', num(proj, 0)), el('td', 'n', num(proj - r.ytd_2026, 0)), el('td', 'n', num((proj - r.ytd_2026) / MREM, 0)));
     tb.replaceChildren(...sc.map(([l, v]) => line(l, v)), pr);
-    document.getElementById('need-title').textContent = 'Cần nỗ lực thêm bao nhiêu từ 25/10 đến 31/12?';
+    document.getElementById('need-title').textContent = 'Cần nỗ lực thêm bao nhiêu từ 01/11 đến 31/12?';
     document.getElementById('need-note').textContent = 'Cùng giai đoạn này năm 2025 bán ' + num(rest25, 0) + ' triệu.';
   }
 
@@ -1022,7 +1022,7 @@ window.CAC = (() => {
     if (st.tab === 'one' && C.renderOne) C.renderOne(rows, asm);
     if (window.CAC.renderKs && st.tab === 'keysd') window.CAC.renderKs(asm);
     if (window.CAC.renderSt && st.tab === 'tier') window.CAC.renderSt(asm);
-    document.getElementById('eyebrow').replaceChildren(el('span', 'eb-date', 'số liệu đến 24/10/2026'), ' · LG ES Channel South · CAC Sell-out (MRP) · Sub-D · Cross Sales');
+    document.getElementById('eyebrow').replaceChildren(el('span', 'eb-date', 'số liệu đến 31/10/2026'), ' · LG ES Channel South · CAC Sell-out (MRP) · Sub-D · Cross Sales');
     C.applyScope();
   };
   dash.onData(() => C.render());
@@ -1153,7 +1153,7 @@ window.CAC = (() => {
     const v = (t, f, cls) => S(t, A, f, w, 'v ' + (cls || ''));
     document.getElementById('one-tiles').replaceChildren(
       tile('S.Out YTD/2026 (triệu)', v(num(r.ytd_2026 * 1000, 0), 'ytd_2026'), ['GR ', S(spct(r.gr_ytd), A, 'gr_ytd', w, tone(r.gr_ytd)), ' · Δ ', S(sgn(r.gap_ytd * 1000, 0), A, 'gap_ytd', w, tone(r.gap_ytd)), ' triệu'], RK('ytd_2026'), true),
-      tile('Đà 2H (01/07–24/10) vs cùng kỳ', v(spct(r.gr_q3, 0), 'gr_q3', tone(r.gr_q3)), [S(num(r.q3_2026 * 1000, 0), A, 'q3_2026', w), ' vs ', S(num(r.q3_2025 * 1000, 0), A, 'q3_2025', w), ' triệu'], RK('gr_q3')),
+      tile('Đà 2H (01/07–31/10) vs cùng kỳ', v(spct(r.gr_q3, 0), 'gr_q3', tone(r.gr_q3)), [S(num(r.q3_2026 * 1000, 0), A, 'q3_2026', w), ' vs ', S(num(r.q3_2025 * 1000, 0), A, 'q3_2025', w), ' triệu'], RK('gr_q3')),
       tile('Độ phủ Sub-D 2026', v(pct(r.pen_2026, 0), 'pen_2026', r.pen_2026 < s.pen_2026 ? 'dn' : 'up'), [S(num(r.buying_2026, 0), A, 'buying_2026', w), '/', S(num(r.active_base, 0), A, 'active_base', w), ' shop · South ', S(pct(s.pen_2026, 0), A, 'pen_2026', sw)], RK('pen_2026')),
       tile('Shop mới / mất 2026', (() => { const x = el('span', 'v'); x.append(S(num(r.new_2026, 0), A, 'new_2026', w, 'up'), ' / ', S(num(r.lost_2026, 0), A, 'lost_2026', w, 'dn')); return x; })(), ['Ròng ', S(sgn(r.net_dev, 0), A, 'net_dev', w, tone(r.net_dev)), ' shop'], RK('net_dev')),
       tile('Key SD đạt / dự kiến đạt mốc', (() => { const x = el('span', 'v'); x.append(S(num(r.keysd_ok, 0), A, 'keysd_ok', w), ' / ', S(num(r.keysd, 0), A, 'keysd', w)); return x; })(), [S(num(r.keysd_zero, 0), A, 'keysd_zero', w, r.keysd_zero ? 'dn' : ''), ' Key SD chưa S.Out H2'], RK('keysd_ok_rate')),
@@ -1200,7 +1200,7 @@ window.CAC = (() => {
     lost: 'Có S.Out năm 2025, chưa có S.Out YTD/2026. Xếp theo doanh số 2025. Yêu cầu: gặp chủ shop, tìm lý do, chốt đơn đầu tiên.',
     cool: 'Vẫn mua 2026 nhưng hơn 60 ngày chưa S.Out, hoặc YTD giảm hơn 30% (shop ≥ 100 tr cùng kỳ). Yêu cầu: tìm nguyên nhân giá, hàng hay đối thủ.',
     up: 'Shop mới 2026, tăng ≥ 30% (≥ 50 tr), hoặc ứng viên Key SD. Yêu cầu: tăng tần suất ghé, mở thêm model, chuẩn bị hồ sơ Key SD.',
-    oks: 'Doanh số chương trình (MRP ÷ 1,1 × 0,8, triệu) từ 01/07. "Cần/tháng" = phần thiếu tới mốc kế chia 2,2 tháng còn lại.',
+    oks: 'Doanh số chương trình (MRP ÷ 1,1 × 0,8, triệu) từ 01/07. "Cần/tháng" = phần thiếu tới mốc kế chia 2 tháng còn lại.',
     ws: 'Shop Active trong mapping, chưa từng có S.Out CAC 2024–2026. Đây là nguồn mở rộng hệ thống Sub-D CAC.',
   };
   document.querySelectorAll('#seg button').forEach((b) => b.addEventListener('click', () => { st.list = b.dataset.list; C.render(); }));
@@ -1475,7 +1475,7 @@ window.CAC = (() => {
       tile('Target SO tháng (triệu)', v(num(r.tgt_so, 0), 'tgt_so'), ['T10/2025: ', S(num(r.so_py, 0), T, 'so_py', w), ' · GR target ', S(spct(r.tgt_gr, 0), T, 'tgt_gr', w)], null, true),
       tile('Đạt MTD (triệu)', v(num(r.mtd_so, 0), 'mtd_so', r.ach >= r.time_gone ? 'up' : 'dn'), ['Cùng kỳ T10/25: ', S(num(r.mtd_py, 0), T, 'mtd_py', w), ' · ', S(num(r.buying, 0), T, 'buying', w), ' shop đang mua']),
       tile('Dự kiến cuối tháng', v(pct(r.proj_ach, 0), 'proj_ach', r.proj_ach >= 1 ? 'up' : r.proj_ach >= 0.8 ? 'wn' : 'dn'), ['Theo nhịp hiện tại: ', S(num(r.proj, 0), T, 'proj', w), ' triệu']),
-      tile(r.gap > 0 ? 'Còn thiếu (triệu)' : 'Đã đạt target', v(r.gap > 0 ? num(r.gap, 0) : '✓', 'gap', r.gap > 0 ? 'dn' : 'up'), r.gap > 0 ? ['Cần ', S(num(r.need_day, 0), T, 'need_day', w), ' triệu/ngày trong ' + (r.dim - r.day) + ' ngày còn lại'] : ['Vượt ', num(r.mtd_so - r.tgt_so, 0), ' triệu']),
+      tile(r.gap > 0 ? 'Còn thiếu (triệu)' : 'Đã đạt target', v(r.gap > 0 ? num(r.gap, 0) : '✓', 'gap', r.gap > 0 ? 'dn' : 'up'), r.gap > 0 ? (r.day >= r.dim ? ['Tháng đã kết thúc, chưa đạt target'] : ['Cần ', S(num(r.need_day, 0), T, 'need_day', w), ' triệu/ngày trong ' + (r.dim - r.day) + ' ngày còn lại']) : ['Vượt ', num(r.mtd_so - r.tgt_so, 0), ' triệu']),
       tile('Cover: đạt / target', (() => { const x = el('span', 'v ' + (r.cover >= r.tgt_cover ? 'up' : 'dn')); x.append(S(num(r.cover, 0), T, 'cover', w), ' / ', S(num(r.tgt_cover, 0), T, 'tgt_cover', w)); return x; })(), ['Cùng kỳ T10/25: ', S(num(r.cover_py, 0), T, 'cover_py', w)]),
     );
   }
