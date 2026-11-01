@@ -285,6 +285,28 @@ _boot:(d,lock)=>{window.__CAC_DATA__=d;window.__CAC_LOCK__=lock;params=Object.as
 
   <!-- ============ TAB 1: 1:1 ASM ============ -->
   <section id="one" data-page="one">
+    <div class="cac-card" id="card-tgt-team-n" hidden>
+      <h3 id="tgt-team-title-n">Target &amp; Perf tháng 10/2026 · team ASM</h3>
+      <p class="cac-note" id="tgt-team-note-n">S.Out triệu VND giá MRP, mọi Bill to, Sub-D (cùng cách tính bảng target của team). Thanh đỏ = % đạt; vạch đen = % thời gian đã qua. Dự kiến = nhịp ngày hiện tại × số ngày của tháng.</p>
+      <div class="cac-scroll">
+        <table id="tb-tgt-n" data-source="asm_target_n" data-row-key="asm">
+          <thead><tr>
+            <th data-field="asm"><button>ASM</button></th>
+            <th class="n" data-field="tgt_so"><button>Target SO</button></th>
+            <th class="n" data-field="mtd_so"><button>Đạt MTD</button></th>
+            <th data-field="ach"><button>% đạt</button></th>
+            <th class="n" data-field="proj"><button>Dự kiến cuối tháng</button></th>
+            <th class="n" data-field="proj_ach"><button>% dự kiến</button></th>
+            <th class="n" data-field="gap"><button>Còn thiếu</button></th>
+            <th class="n" data-field="need_day"><button>Cần/ngày</button></th>
+            <th class="n" data-field="tgt_cover"><button>Target Cover</button></th>
+            <th class="n" data-field="cover"><button>Cover đạt</button></th>
+            <th class="n" data-field="mtd_py"><button>Cùng kỳ T10/25</button></th>
+          </tr></thead><tbody></tbody><tfoot></tfoot>
+        </table>
+      </div>
+    </div>
+
     <div class="cac-card" id="card-tgt-team">
       <h3 id="tgt-team-title">Target &amp; Perf tháng 10/2026 · team ASM</h3>
       <p class="cac-note" id="tgt-team-note">S.Out triệu VND giá MRP, mọi Bill to, Sub-D (cùng cách tính bảng target của team). Thanh đỏ = % đạt; vạch đen = % thời gian đã qua. Dự kiến = nhịp ngày hiện tại × số ngày của tháng.</p>
@@ -364,6 +386,12 @@ _boot:(d,lock)=>{window.__CAC_DATA__=d;window.__CAC_LOCK__=lock;params=Object.as
       </div>
 
       <h2 class="cac-sec" id="sec-tgt"><span>B</span>Target &amp; Perf tháng hiện tại</h2>
+      <div class="cac-card" id="card-tgt-n" hidden>
+        <h3 id="tgt-title-n">Tháng 10/2026</h3>
+        <p class="cac-note" id="tgt-note-n">SO đơn vị triệu VND</p>
+        <div class="cac-tgtbar" id="tgt-bar-n" data-source="asm_target_n"></div>
+        <div class="cac-tiles" id="tgt-tiles-n" data-source="asm_target_n"></div>
+      </div>
       <div class="cac-card" id="card-tgt">
         <h3 id="tgt-title">Tháng 10/2026</h3>
         <p class="cac-note" id="tgt-note">SO đơn vị triệu VND</p>
@@ -372,7 +400,7 @@ _boot:(d,lock)=>{window.__CAC_DATA__=d;window.__CAC_LOCK__=lock;params=Object.as
       </div>
       <div class="cac-card" id="card-mshop">
         <h3 id="mshop-title">Shop tháng này: ai đang mua, ai chưa mua</h3>
-        <p class="cac-note">Shop có S.Out tháng 10/2026, 3 tháng trước (T7–T9/2026) hoặc cùng kỳ T10/2025, gồm cả shop Deactive.<br>Dòng nền đỏ nhạt = 3 tháng trước hoặc cùng kỳ có mua nhưng tháng này chưa mua, ưu tiên chăm sóc.<br>Cover = shop mới hoặc kích hoạt lại (2 tháng trước không mua).</p>
+        <p class="cac-note"><span id="mshop-scope">Shop có S.Out tháng 10/2026, 3 tháng trước (T7–T9/2026) hoặc cùng kỳ T10/2025</span>, gồm cả shop Deactive.<br>Dòng nền đỏ nhạt = 3 tháng trước hoặc cùng kỳ có mua nhưng tháng này chưa mua, ưu tiên chăm sóc.<br>Cover = shop mới hoặc kích hoạt lại (2 tháng trước không mua).</p>
         <div class="cac-filter">
           <select id="ms-f" aria-label="Lọc shop tháng"><option value="">Tất cả</option><option value="buy">Đang mua tháng này</option><option value="miss">Chưa mua tháng này</option><option value="cover">Cover (mới/kích hoạt lại)</option></select>
         </div>
@@ -1441,42 +1469,49 @@ window.CAC = (() => {
     tf.replaceChildren(ft);
   }
 
-  // ---------- Target & Perf tháng hiện tại
-  const T = 'asm_target';
-  const achCell = (r, w) => { const td = el('td', 'tgt-ach'); const bar = el('span', 'tb'); const f = el('span', 'tf' + (r.ach >= r.time_gone ? ' ok' : ''));
+  // ---------- Target & Perf: tháng chính (asm_target) + tháng N mới (asm_target_n, chỉ có khi số liệu ≤ ngày 08 và đã có target tháng N)
+  const T = 'asm_target', TN = 'asm_target_n';
+  const mT = (m, y2) => 'T' + (+m.slice(5)) + '/' + (y2 ? m.slice(2, 4) : m.slice(0, 4));
+  const pyM = (m) => (+m.slice(0, 4) - 1) + m.slice(4);
+  const closeLbl = m => '07/' + String(+m.slice(5) % 12 + 1).padStart(2, '0');
+  const achCell = (r, w, T) => { const td = el('td', 'tgt-ach'); const bar = el('span', 'tb'); const f = el('span', 'tf' + (r.ach >= r.time_gone ? ' ok' : ''));
     f.style.width = Math.min(100, (r.ach || 0) * 100) + '%'; const mk = el('span', 'tm'); mk.style.left = (r.time_gone * 100) + '%'; bar.append(f, mk);
     td.append(bar, S(pct(r.ach, 0), T, 'ach', w, r.ach >= r.time_gone ? 'up' : 'dn')); return td; };
-  function targetTeam(S0) {
-    const ds = C.ds(T); const tb = document.querySelector('#tb-tgt tbody'), tf = document.querySelector('#tb-tgt tfoot');
-    if (ds.status !== 'ok') { tb.replaceChildren(); tf.replaceChildren(); return; }
-    const all = ds.data; const tk = S0.sup ? 'Sup · ' + S0.sup : TOTAL; const tot = all.find((r) => r.asm === tk);
-    const rows = C.applySort(all.filter((r) => r.kind === 'asm' && (!S0.sup || C.sel().has(r.asm))), 'tb-tgt', {f: 'proj_ach', dir: -1});
-    if (tot) document.getElementById('tgt-team-title').textContent = 'Target & Perf tháng ' + tot.month.slice(5) + '/' + tot.month.slice(0, 4) + ' · ' + (S0.sup ? 'Sup ' + S0.sup : 'team ASM') + ' · đến ngày ' + tot.day + '/' + tot.dim + ' (' + pct(tot.time_gone, 0) + ' thời gian)';
+  const ds2 = (T) => { const d = C.ds(T); return d.status === 'ok' && d.data && d.data.length ? d.data : null; };
+  function targetTeam(S0, T, pre) {
+    const card = document.getElementById('card-tgt-team' + pre); const tb = document.querySelector('#tb-tgt' + pre + ' tbody'), tf = document.querySelector('#tb-tgt' + pre + ' tfoot');
+    const all = ds2(T); if (pre) card.hidden = !all; if (!all) { tb.replaceChildren(); tf.replaceChildren(); return; }
+    const tk = S0.sup ? 'Sup · ' + S0.sup : TOTAL; const tot = all.find((r) => r.asm === tk);
+    const rows = C.applySort(all.filter((r) => r.kind === 'asm' && (!S0.sup || C.sel().has(r.asm))), 'tb-tgt' + pre, {f: 'proj_ach', dir: -1});
+    if (tot) { document.getElementById('tgt-team-title' + pre).textContent = 'Target & Perf tháng ' + tot.month.slice(5) + '/' + tot.month.slice(0, 4) + ' · ' + (S0.sup ? 'Sup ' + S0.sup : 'team ASM') + ' · đến ngày ' + String(tot.day).padStart(2, '0') + '/' + tot.month.slice(5) + ' (' + pct(tot.time_gone, 0) + ' thời gian)' + (tot.day >= tot.dim ? (tot.final ? ' · số tháng đã chốt' : ' · số tháng chốt sau ' + closeLbl(tot.month)) : '');
+      const th = document.querySelector('#tb-tgt' + pre + ' th[data-field="mtd_py"] button'); if (th) th.textContent = 'Cùng kỳ ' + mT(pyM(tot.month), 1); }
     const line = (r, cls) => { const tr = el('tr', cls || ''); tr.dataset.key = r.asm; const w = W(r.asm);
       const nm = el('td', 'nowrap'); if (cls) nm.append(r.kind === 'total' ? 'Tổng team' : 'Tổng ' + r.asm.replace('Sup · ', 'Sup ')); else { const b = el('button', 'cac-lnk', r.asm); b.type = 'button'; b.addEventListener('click', () => dash.setParams({asm: r.asm})); nm.append(b); }
-      tr.append(nm, el('td', 'n', num(r.tgt_so, 0)), el('td', 'n', num(r.mtd_so, 0)), achCell(r, w), el('td', 'n', num(r.proj, 0)),
+      tr.append(nm, el('td', 'n', num(r.tgt_so, 0)), el('td', 'n', num(r.mtd_so, 0)), achCell(r, w, T), el('td', 'n', num(r.proj, 0)),
         el('td', 'n ' + (r.proj_ach >= 1 ? 'up' : r.proj_ach >= 0.8 ? 'wn' : 'dn'), pct(r.proj_ach, 0)), el('td', 'n' + (r.gap > 0 ? ' dn' : ''), r.gap > 0 ? num(r.gap, 0) : '✓'),
-        el('td', 'n', r.gap > 0 ? num(r.need_day, 0) : '—'), el('td', 'n', num(r.tgt_cover, 0)), el('td', 'n ' + (r.cover >= r.tgt_cover ? 'up' : 'dn'), num(r.cover, 0)), el('td', 'n', num(r.mtd_py, 0)));
+        el('td', 'n', r.gap > 0 && r.need_day != null ? num(r.need_day, 0) : '—'), el('td', 'n', num(r.tgt_cover, 0)), el('td', 'n ' + (r.cover >= r.tgt_cover ? 'up' : 'dn'), num(r.cover, 0)), el('td', 'n', num(r.mtd_py, 0)));
       return tr; };
     tb.replaceChildren(...rows.map((r) => line(r))); tf.replaceChildren(...(tot ? [line(tot, 'tot')] : []));
   }
-  function targetAsm(asm) {
-    const ds = C.ds(T); const r = ds.status === 'ok' ? ds.data.find((x) => x.asm === asm) : null;
-    const tiles = document.getElementById('tgt-tiles'), bar = document.getElementById('tgt-bar');
-    if (!r) { document.getElementById('tgt-title').textContent = 'Chưa có target tháng này cho ' + asm; tiles.replaceChildren(); bar.replaceChildren(); return; }
-    const w = W(asm); const v = (t, f, cls) => S(t, T, f, w, 'v ' + (cls || ''));
-    document.getElementById('tgt-title').textContent = 'Tháng ' + r.month.slice(5) + '/' + r.month.slice(0, 4) + ' · số liệu đến ngày ' + r.day + '/' + r.dim + ' · đã qua ' + pct(r.time_gone, 0) + ' thời gian';
+  function targetAsm(asm, T, pre) {
+    const all = ds2(T); const r = all ? all.find((x) => x.asm === asm) : null;
+    const card = document.getElementById('card-tgt' + pre), tiles = document.getElementById('tgt-tiles' + pre), bar = document.getElementById('tgt-bar' + pre), ttl = document.getElementById('tgt-title' + pre);
+    if (pre) { card.hidden = !r; if (!r) return; }
+    if (!r) { ttl.textContent = 'Chưa có target tháng này cho ' + asm; tiles.replaceChildren(); bar.replaceChildren(); return; }
+    const w = W(asm); const v = (t, f, cls) => S(t, T, f, w, 'v ' + (cls || '')); const done = r.day >= r.dim;
+    ttl.textContent = 'Tháng ' + r.month.slice(5) + '/' + r.month.slice(0, 4) + ' · số liệu đến ngày ' + String(r.day).padStart(2, '0') + '/' + r.month.slice(5) + ' · đã qua ' + pct(r.time_gone, 0) + ' thời gian' + (done ? (r.final ? ' · số đã chốt' : ' * Số chốt sau ' + closeLbl(r.month)) : '');
     const b = el('div', 'tb big'); const f = el('span', 'tf' + (r.ach >= r.time_gone ? ' ok' : '')); f.style.width = Math.min(100, (r.ach || 0) * 100) + '%';
     const mk = el('span', 'tm'); mk.style.left = r.time_gone * 100 + '%'; b.append(f, mk);
     const lab = el('div', 'tl'); lab.append('Đạt ', S(num(r.mtd_so, 0), T, 'mtd_so', w), ' / ', S(num(r.tgt_so, 0), T, 'tgt_so', w), ' triệu · ', S(pct(r.ach, 0), T, 'ach', w, r.ach >= r.time_gone ? 'up' : 'dn'),
       r.ach >= r.time_gone ? ' · đang đi trước tiến độ' : ' · chậm ' + Math.round((r.time_gone - r.ach) * 100) + ' điểm % so với thời gian');
     bar.replaceChildren(lab, b);
+    const py = pyM(r.month);
     tiles.replaceChildren(
-      tile('Target SO tháng (triệu)', v(num(r.tgt_so, 0), 'tgt_so'), ['T10/2025: ', S(num(r.so_py, 0), T, 'so_py', w), ' · GR target ', S(spct(r.tgt_gr, 0), T, 'tgt_gr', w)], null, true),
-      tile('Đạt MTD (triệu)', v(num(r.mtd_so, 0), 'mtd_so', r.ach >= r.time_gone ? 'up' : 'dn'), ['Cùng kỳ T10/25: ', S(num(r.mtd_py, 0), T, 'mtd_py', w), ' · ', S(num(r.buying, 0), T, 'buying', w), ' shop đang mua']),
+      tile('Target SO tháng (triệu)', v(num(r.tgt_so, 0), 'tgt_so'), [mT(py) + ': ', S(num(r.so_py, 0), T, 'so_py', w), ' · GR target ', S(spct(r.tgt_gr, 0), T, 'tgt_gr', w)], null, true),
+      tile('Đạt MTD (triệu)', v(num(r.mtd_so, 0), 'mtd_so', r.ach >= r.time_gone ? 'up' : 'dn'), ['Cùng kỳ ' + mT(py, 1) + ': ', S(num(r.mtd_py, 0), T, 'mtd_py', w), ' · ', S(num(r.buying, 0), T, 'buying', w), ' shop đang mua']),
       tile('Dự kiến cuối tháng', v(pct(r.proj_ach, 0), 'proj_ach', r.proj_ach >= 1 ? 'up' : r.proj_ach >= 0.8 ? 'wn' : 'dn'), ['Theo nhịp hiện tại: ', S(num(r.proj, 0), T, 'proj', w), ' triệu']),
-      tile(r.gap > 0 ? 'Còn thiếu (triệu)' : 'Đã đạt target', v(r.gap > 0 ? num(r.gap, 0) : '✓', 'gap', r.gap > 0 ? 'dn' : 'up'), r.gap > 0 ? (r.day >= r.dim ? ['Tháng đã kết thúc, chưa đạt target'] : ['Cần ', S(num(r.need_day, 0), T, 'need_day', w), ' triệu/ngày trong ' + (r.dim - r.day) + ' ngày còn lại']) : ['Vượt ', num(r.mtd_so - r.tgt_so, 0), ' triệu']),
-      tile('Cover: đạt / target', (() => { const x = el('span', 'v ' + (r.cover >= r.tgt_cover ? 'up' : 'dn')); x.append(S(num(r.cover, 0), T, 'cover', w), ' / ', S(num(r.tgt_cover, 0), T, 'tgt_cover', w)); return x; })(), ['Cùng kỳ T10/25: ', S(num(r.cover_py, 0), T, 'cover_py', w)]),
+      tile(r.gap > 0 ? 'Còn thiếu (triệu)' : 'Đã đạt target', v(r.gap > 0 ? num(r.gap, 0) : '✓', 'gap', r.gap > 0 ? 'dn' : 'up'), r.gap > 0 ? (done ? [r.final ? 'Tháng đã chốt, chưa đạt target' : '* Số chốt sau ' + closeLbl(r.month)] : ['Cần ', S(num(r.need_day, 0), T, 'need_day', w), ' triệu/ngày trong ' + (r.dim - r.day) + ' ngày còn lại']) : ['Vượt ', num(r.mtd_so - r.tgt_so, 0), ' triệu']),
+      tile('Cover: đạt / target', (() => { const x = el('span', 'v ' + (r.cover >= r.tgt_cover ? 'up' : 'dn')); x.append(S(num(r.cover, 0), T, 'cover', w), ' / ', S(num(r.tgt_cover, 0), T, 'tgt_cover', w)); return x; })(), ['Cùng kỳ ' + mT(py, 1) + ': ', S(num(r.cover_py, 0), T, 'cover_py', w)]),
     );
   }
   const msf = document.getElementById('ms-f'); msf.addEventListener('change', () => C.render());
@@ -1485,7 +1520,12 @@ window.CAC = (() => {
     const mine = ds.data.filter((r) => r.asm === asm); const miss = (r) => !r.mtd && (r.last_m > 0 || r.m_2 > 0 || r.m_3 > 0 || r.ly_m > 0);
     const rows = C.applySort(mine.filter((r) => !msf.value || (msf.value === 'buy' ? r.mtd > 0 : msf.value === 'miss' ? miss(r) : !!r.cover)), 'tb-ms', {f: 'mtd', dir: -1});
     const nb = mine.filter((r) => r.mtd > 0).length, nm = mine.filter(miss).length;
-    document.getElementById('mshop-title').textContent = 'Shop tháng này: ' + nb + ' đang mua · ' + nm + ' chưa mua (3 tháng trước/cùng kỳ có mua)';
+    const M = (ds.data[0] || {}).month || '';
+    if (M) { const add = (k) => { const d = new Date(+M.slice(0, 4), +M.slice(5) - 1 - k, 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); };
+      const tr0 = (ds2(T) || []).find((x) => x.month === M); const done = tr0 && tr0.day >= tr0.dim; const hd = {mtd: mT(M, 1) + (done ? '' : ' MTD'), last_m: mT(add(1), 1), m_2: mT(add(2), 1), m_3: mT(add(3), 1), ly_m: mT(pyM(M), 1)};
+      Object.entries(hd).forEach(([f, t]) => { const b = document.querySelector('#tb-ms th[data-field="' + f + '"] button'); if (b) b.textContent = t; });
+      document.getElementById('mshop-scope').textContent = 'Shop có S.Out tháng ' + M.slice(5) + '/' + M.slice(0, 4) + ', 3 tháng trước (T' + (+add(3).slice(5)) + '–' + mT(add(1)) + ') hoặc cùng kỳ ' + mT(pyM(M)); }
+    document.getElementById('mshop-title').textContent = 'Hiện trạng Shop tháng ' + M.slice(5) + '/' + M.slice(0, 4) + ': ' + nb + ' đang mua · ' + nm + ' chưa mua (3 tháng trước/cùng kỳ có mua)';
     const v = (x) => (x ? num(x, 0) : '');
     tb.replaceChildren(...rows.map((r) => { const tr = el('tr', miss(r) ? 'miss' : ''); tr.dataset.key = r.code;
       const cv = el('td'); if (r.cover) cv.append(el('span', 'pill p1', r.cover));
@@ -1494,10 +1534,10 @@ window.CAC = (() => {
   }
   C.renderOne = (rows, asm) => {
     const pick = document.getElementById('one-pick'), body = document.getElementById('one-body');
-    pick.hidden = !!asm; body.hidden = !asm; document.getElementById('card-tgt-team').hidden = !!asm;
-    if (!asm) { picker(rows); targetTeam(C.sel()); return; }
+    pick.hidden = !!asm; body.hidden = !asm; document.getElementById('card-tgt-team').hidden = !!asm; if (asm) document.getElementById('card-tgt-team-n').hidden = true;
+    if (!asm) { picker(rows); targetTeam(C.sel(), TN, '-n'); targetTeam(C.sel(), T, ''); return; }
     const r = rows.find((x) => x.asm === asm), s = rows.find((x) => x.asm === TOTAL); if (!r) return;
-    profile(r, s); tiles(r, s); commitments(asm); targetAsm(asm); monthShops(asm); years(r); coverage(asm); dealers(asm); challenges(asm); source(asm); funnel(r); C.monthChart(asm); prov(asm);
+    profile(r, s); tiles(r, s); commitments(asm); targetAsm(asm, TN, '-n'); targetAsm(asm, T, ''); monthShops(asm); years(r); coverage(asm); dealers(asm); challenges(asm); source(asm); funnel(r); C.monthChart(asm); prov(asm);
     ['lost','cool','up'].forEach((k) => { const e = document.getElementById('n-' + k); e.dataset.where = W(asm); e.textContent = num(r['w_' + k], 0); });
     const nk = document.getElementById('n-ks'); nk.dataset.where = W(asm); nk.textContent = num(r.keysd, 0);
     const nw = document.getElementById('n-ws'); nw.dataset.where = W(asm); nw.textContent = num(r.white_space, 0);
